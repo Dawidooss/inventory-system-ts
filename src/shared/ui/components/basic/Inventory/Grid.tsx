@@ -10,11 +10,11 @@ import getItemConfig from "shared/utils/getItemConfig";
 import { Object } from "shared/utils/Object";
 import { useMouse } from "@rbxts/pretty-react-hooks";
 import itemFits from "shared/utils/itemFits";
+import LoadingCircle from "../LoadingCircle";
 
 type Props = {
 	Position: UDim2;
-	AnchorPoint?: Vector2;
-	Data: Grid;
+	Data?: Grid;
 	Unified?: boolean;
 };
 
@@ -34,6 +34,7 @@ export default function Grid(props: Props) {
 
 	const updateColorMap = useCallback(() => {
 		// create newColorMap
+		if (!props.Data) return;
 		let newColorMap: ColorMap = {};
 		for (let x of $range(0, props.Data.width - 1)) {
 			newColorMap[x] = {};
@@ -86,7 +87,7 @@ export default function Grid(props: Props) {
 
 	useEffect(() => {
 		updateColorMap();
-	}, [props.Data.items, itemHoldingId]);
+	}, [itemHoldingId]);
 
 	useMouse(() => {
 		if (itemHoldingOffset) {
@@ -95,30 +96,43 @@ export default function Grid(props: Props) {
 	});
 
 	return (
-		<frame
-			Size={UDim2.fromOffset(props.Data.width * cellSize, props.Data.height * cellSize)}
-			AnchorPoint={props.AnchorPoint}
-			Position={props.Position}
-			BackgroundTransparency={1}
-			ref={gridRef}
-		>
-			<Full>
-				<uigridlayout CellSize={new UDim2(0, cellSize, 0, cellSize)} CellPadding={new UDim2()} />
+		<Full>
+			{props.Data ? (
+				<frame
+					Size={UDim2.fromOffset(props.Data!.width * cellSize, props.Data!.height * cellSize)}
+					AnchorPoint={new Vector2(0.5, 0.5)}
+					Position={props.Position}
+					BackgroundTransparency={1}
+					ref={gridRef}
+				>
+					<Full>
+						<uigridlayout CellSize={new UDim2(0, cellSize, 0, cellSize)} CellPadding={new UDim2()} />
 
-				{table.create(props.Data.width * props.Data.height, 0).map((v, i) => {
-					const y = math.floor(i / props.Data.width);
-					const x = i - y * props.Data.width;
+						{table.create(props.Data!.width * props.Data!.height, 0).map((v, i) => {
+							const y = math.floor(i / props.Data!.width);
+							const x = i - y * props.Data!.width;
 
-					return <Cell key={v} Color={colorMap[x] && colorMap[x][y]} />;
-				})}
-			</Full>
-			{Object.entries(props.Data.items)
-				.filter(([id]) => {
-					return id !== itemHoldingId;
-				})
-				.map(([id, v]) => (
-					<Item key={id} Data={v} Id={id} />
-				))}
-		</frame>
+							return <Cell key={v} Color={colorMap[x] && colorMap[x][y]} />;
+						})}
+					</Full>
+					{Object.entries(props.Data!.items)
+						.filter(([id]) => {
+							return id !== itemHoldingId;
+						})
+						.map(([id, v]) => (
+							<Item key={id} Data={v} Id={id} />
+						))}
+				</frame>
+			) : (
+				<frame
+					AnchorPoint={new Vector2(0.5, 0.5)}
+					Position={props.Position}
+					Size={UDim2.fromOffset(75, 75)}
+					BackgroundTransparency={1}
+				>
+					<LoadingCircle />
+				</frame>
+			)}
+		</Full>
 	);
 }

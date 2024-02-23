@@ -19,8 +19,6 @@ export default function InventoryUI() {
 	const itemHoldingOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingOffset);
 	const itemHolding = Object.entries(backpack.items).find(([id]) => id === itemHoldingId);
 
-	const holdingItemRef = createRef<ImageButton>();
-
 	useViewport(() => {
 		const conn = camera.GetPropertyChangedSignal("ViewportSize").Connect(() => {
 			clientState.setCellSize(camera.ViewportSize.X * (50 / 1920));
