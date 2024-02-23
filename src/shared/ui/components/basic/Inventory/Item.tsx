@@ -35,7 +35,7 @@ export default function Item(props: Props) {
 			Event={{
 				MouseButton1Down: (rbx) => {
 					const offset = rbx.AbsolutePosition.sub(mouse.getValue());
-					clientState.holdItem(props.Id, offset);
+					clientState.holdItem(props.Data, props.Id, offset);
 				},
 				MouseButton1Up: (rbx) => {
 					if (clientState.getState().inventoryProducer.itemHoldingId === props.Id) {

@@ -42,6 +42,16 @@ export default function InventoryUI() {
 				<uiaspectratioconstraint AspectRatio={0.85} />
 				<Text Text={"EKWIPUNEK"} Position={UDim2.fromScale(0.07, 0.05)} Size={UDim2.fromScale(0.534, 0.06)} />
 				<Grid AnchorPoint={new Vector2(0.5, 1)} Position={UDim2.fromScale(0.5, 0.95)} Data={backpack} />
+
+				<Grid
+					AnchorPoint={new Vector2(0.5, 1)}
+					Position={UDim2.fromScale(0.5, 0.5)}
+					Data={{
+						width: 5,
+						height: 6,
+						items: {},
+					}}
+				/>
 			</imagelabel>
 			{itemHolding && itemHoldingId ? (
 				<Item Id={itemHoldingId} Data={itemHolding[1]} Holding={true} Offset={itemHoldingOffset} />

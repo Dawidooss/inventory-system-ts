@@ -24,6 +24,7 @@ type ColorMap = { [key: number]: { [key: number]: Color3 } };
 
 export default function Grid(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
+	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemHoldingId = useSelector((state: RootState) => state.inventoryProducer.itemHoldingId);
 	const itemHoldingOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingOffset);
 
@@ -39,41 +40,43 @@ export default function Grid(props: Props) {
 		}
 
 		// loop through items and add them to colorMap
-		for (let [id, item] of pairs(props.Data.items)) {
-			const itemConfig = getItemConfig(item.name);
-			if (id === itemHoldingId) {
-				// check if hovering over cells and if fits
-				const mouseLocation = UserInputService.GetMouseLocation()
-					.add(GuiService.GetGuiInset()[0])
-					.add(new Vector2(cellSize / 2, cellSize / 2));
-				// mouse location offseted by grab offset (top-left corner of item)
-				const holdingItemLocation = mouseLocation.add(itemHoldingOffset);
+		if (itemHolding) {
+			const itemConfig = getItemConfig(itemHolding.name);
 
-				// holdingItemLocation related to grid
-				const gridOffset = holdingItemLocation.sub(gridRef.current!.AbsolutePosition);
-				// get cell from pixels
-				const [x, y] = [math.floor(gridOffset.X / cellSize), math.floor(gridOffset.Y / cellSize)];
+			// check if hovering over cells and if fits
+			const mouseLocation = UserInputService.GetMouseLocation()
+				.add(GuiService.GetGuiInset()[0])
+				.add(new Vector2(cellSize / 2, cellSize / 2));
+			// mouse location offseted by grab offset (top-left corner of item)
+			const holdingItemLocation = mouseLocation.add(itemHoldingOffset);
 
-				const fits = itemFits(props.Data, item, x, y);
+			// holdingItemLocation related to grid
+			const gridOffset = holdingItemLocation.sub(gridRef.current!.AbsolutePosition);
+			// get cell from pixels
+			const [x, y] = [math.floor(gridOffset.X / cellSize), math.floor(gridOffset.Y / cellSize)];
 
-				// loop cells and update colors
-				for (let sX of $range(0, itemConfig.width - 1)) {
-					for (let sY of $range(0, itemConfig.height - 1)) {
-						// out of bonds
-						if (x + sX >= props.Data.width || y + sY >= props.Data.height || x + sX < 0 || y + sY < 0)
-							continue;
+			const fits = itemFits(props.Data, itemHolding, x, y);
 
-						newColorMap[x + sX][y + sY] = fits ? Color3.fromRGB(0, 255, 0) : Color3.fromRGB(255, 0, 0);
-					}
+			// loop cells and update colors
+			for (let sX of $range(0, itemConfig.width - 1)) {
+				for (let sY of $range(0, itemConfig.height - 1)) {
+					// out of bonds
+					if (x + sX >= props.Data.width || y + sY >= props.Data.height || x + sX < 0 || y + sY < 0) continue;
+
+					newColorMap[x + sX][y + sY] = fits ? Color3.fromRGB(0, 255, 0) : Color3.fromRGB(255, 0, 0);
 				}
-			} else {
-				// add as occupied
-				for (let sX of $range(0, itemConfig.width - 1)) {
-					for (let sY of $range(0, itemConfig.height - 1)) {
-						// don't override other colors
-						if (newColorMap[item.x + sX][item.y + sY]) continue;
-						newColorMap[item.x + sX][item.y + sY] = Color3.fromRGB(255, 175, 78);
-					}
+			}
+		}
+		// loop through items and add them to colorMap
+		for (let [id, item] of pairs(props.Data.items)) {
+			if (id === itemHoldingId) continue;
+			const itemConfig = getItemConfig(item.name);
+			// add as occupied
+			for (let sX of $range(0, itemConfig.width - 1)) {
+				for (let sY of $range(0, itemConfig.height - 1)) {
+					// don't override other colors
+					if (newColorMap[item.x + sX][item.y + sY]) continue;
+					newColorMap[item.x + sX][item.y + sY] = Color3.fromRGB(255, 175, 78);
 				}
 			}
 		}

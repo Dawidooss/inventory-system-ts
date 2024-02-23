@@ -6,6 +6,7 @@ export interface InventoryProducer {
 	cellSize: number;
 	backpack: Grid;
 
+	itemHolding?: Item;
 	itemHoldingId?: string;
 	itemHoldingOffset: Vector2;
 }
@@ -41,10 +42,12 @@ const inventoryProducer = createProducer(initialState, {
 
 	holdItem: (
 		state: InventoryProducer,
+		itemHolding?: InventoryProducer["itemHolding"],
 		itemHoldingId?: InventoryProducer["itemHoldingId"],
 		itemHoldingOffset?: InventoryProducer["itemHoldingOffset"],
 	) => {
 		state = { ...state };
+		state.itemHolding = itemHolding;
 		state.itemHoldingId = itemHoldingId;
 		state.itemHoldingOffset = itemHoldingOffset || Vector2.zero;
 
