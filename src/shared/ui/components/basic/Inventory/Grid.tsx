@@ -14,7 +14,6 @@ import LoadingCircle from "../LoadingCircle";
 
 type Props = {
 	Position: UDim2;
-	AnchorPoint?: Vector2;
 	Data?: Grid;
 	Unified?: boolean;
 };
@@ -98,7 +97,7 @@ export default function Grid(props: Props) {
 			{props.Data ? (
 				<frame
 					Size={UDim2.fromOffset(props.Data!.width * cellSize, props.Data!.height * cellSize)}
-					AnchorPoint={props.AnchorPoint}
+					AnchorPoint={new Vector2(0.5, 0.5)}
 					Position={props.Position}
 					BackgroundTransparency={1}
 					ref={gridRef}
@@ -122,7 +121,14 @@ export default function Grid(props: Props) {
 						))}
 				</frame>
 			) : (
-				<LoadingCircle AnchorPoint={props.AnchorPoint} Position={props.Position} rotate={true} />
+				<frame
+					AnchorPoint={new Vector2(0.5, 0.5)}
+					Position={props.Position}
+					Size={UDim2.fromOffset(75, 75)}
+					BackgroundTransparency={1}
+				>
+					<LoadingCircle />
+				</frame>
 			)}
 		</Full>
 	);
