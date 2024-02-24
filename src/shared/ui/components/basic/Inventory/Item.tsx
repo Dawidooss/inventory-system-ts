@@ -7,7 +7,6 @@ import getItemConfig from "shared/inventory/getItemConfig";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 
 type Props = {
-	Id: string;
 	Data: Item;
 	Holding?: boolean;
 	Offset?: [number, number];
@@ -18,6 +17,7 @@ export default function Item(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const hoveringCell = useSelector((state: RootState) => state.inventoryProducer.hoveringCell);
 	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
+
 	const [transparency, transparencyAPI] = useMotor(0);
 	const imageRef = useRef<ImageButton>();
 	const mouse = useMouse();
@@ -26,7 +26,10 @@ export default function Item(props: Props) {
 
 	// detect if is hovering and update hoveringItem state
 	useEffect(() => {
-		if (!(props.Locked || clientState.getState().inventoryProducer.itemHoldingId === props.Id) && hoveringCell) {
+		if (
+			!(props.Locked || clientState.getState().inventoryProducer.itemHolding?.id === props.Data.id) &&
+			hoveringCell
+		) {
 			let x = hoveringCell[0] + itemHoldingCellOffset[0];
 			let y = hoveringCell[1] + itemHoldingCellOffset[1];
 
@@ -87,7 +90,7 @@ export default function Item(props: Props) {
 
 					const offset = rbx.AbsolutePosition.sub(mouse.getValue());
 
-					clientState.holdItem(props.Data, props.Id, [offset.X, offset.Y]);
+					clientState.holdItem(props.Data, [offset.X, offset.Y]);
 					clientState.setHoveringItem(props.Data, false);
 				},
 			}}

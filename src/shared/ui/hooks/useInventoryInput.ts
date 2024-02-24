@@ -17,11 +17,10 @@ export default function useInventoryInput() {
 		const conn = UserInputService.InputEnded.Connect((input) => {
 			if (input.UserInputType === Enum.UserInputType.MouseButton1) {
 				if (hoveringCell && hoveringGridId && itemHolding) {
-					// move
-
 					const [_, itemHoldingGridId] = findItem(grids, itemHolding.id);
 
-					if (itemHoldingGridId && itemFits(grids[hoveringGridId], itemHolding, hoveringCell)) {
+					// move
+					if (itemFits(grids[hoveringGridId], itemHolding, hoveringCell)) {
 						const [lastX, lastY] = [itemHolding.x, itemHolding.y];
 						clientState.moveItem(itemHolding, hoveringGridId, hoveringCell);
 						clientState.lockItem(itemHolding, true);
@@ -35,7 +34,7 @@ export default function useInventoryInput() {
 						InventoryEvents.functions.moveItem
 							.Call({
 								itemId: itemHolding.id,
-								gridId: itemHoldingGridId,
+								gridId: itemHoldingGridId!,
 								targetGridId: hoveringGridId,
 								x: hoveringCell[0],
 								y: hoveringCell[1],
@@ -44,7 +43,7 @@ export default function useInventoryInput() {
 								clientState.removeItem(mockup);
 								clientState.lockItem(itemHolding, false);
 								if (!succ) {
-									clientState.moveItem(itemHolding, itemHoldingGridId, [lastX, lastY]);
+									clientState.moveItem(itemHolding, itemHoldingGridId!, [lastX, lastY]);
 								}
 								print(clientState.getState().inventoryProducer);
 							});

@@ -22,9 +22,8 @@ export default function InventoryUI() {
 		(state: RootState) => state.inventoryProducer.inventories[tostring(Players.LocalPlayer.UserId)],
 	);
 
-	const itemHoldingId = useSelector((state: RootState) => state.inventoryProducer.itemHoldingId);
+	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemHoldingOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingOffset);
-	const [itemHolding, itemHoldingGridId] = findItem(grids, itemHoldingId || "") || [];
 
 	useInventoryInput();
 
@@ -59,11 +58,7 @@ export default function InventoryUI() {
 					Data={grids[localInventory?.test]}
 				/> */}
 			</imagelabel>
-			{itemHolding && itemHoldingId ? (
-				<Item Id={itemHoldingId} Data={itemHolding} Holding={true} Offset={itemHoldingOffset} />
-			) : (
-				<Full />
-			)}
+			{itemHolding ? <Item Data={itemHolding} Holding={true} Offset={itemHoldingOffset} /> : <Full />}
 		</Full>
 	);
 }

@@ -30,7 +30,6 @@ export default function Grid(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
-	const itemHoldingId = useSelector((state: RootState) => state.inventoryProducer.itemHoldingId);
 	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
 
 	const hoveringItems = useSelector((state: RootState) => state.inventoryProducer.hoveringItems);
@@ -123,7 +122,7 @@ export default function Grid(props: Props) {
 	}
 	useEffect(() => {
 		updateHoveringCell();
-	}, [itemHoldingId, props.Data, hoveringCell]);
+	}, [itemHolding, props.Data, hoveringCell]);
 
 	useMouse(() => {
 		if (itemHoldingCellOffset) {
@@ -152,7 +151,7 @@ export default function Grid(props: Props) {
 						})}
 					</Full>
 					{props.Data!.items.map((v) => (
-						<Item key={v.id} Data={v} Id={v.id} Locked={v.id === itemHoldingId || v.locked} />
+						<Item key={v.id} Data={v} Locked={v.id === itemHolding?.id || v.locked} />
 					))}
 				</frame>
 			) : (

@@ -12,7 +12,6 @@ export interface InventoryProducer {
 	grids: { [id: string]: Grid };
 
 	itemHolding?: Item;
-	itemHoldingId?: string;
 	itemHoldingOffset: [number, number];
 	itemHoldingCellOffset: [number, number];
 
@@ -88,11 +87,9 @@ const inventoryProducer = createProducer(initialState, {
 	holdItem: (
 		state: InventoryProducer,
 		itemHolding?: InventoryProducer["itemHolding"],
-		itemHoldingId?: InventoryProducer["itemHoldingId"],
 		itemHoldingOffset?: InventoryProducer["itemHoldingOffset"],
 	) => {
 		state.itemHolding = itemHolding;
-		state.itemHoldingId = itemHoldingId;
 		state.itemHoldingOffset = itemHoldingOffset || [0, 0];
 
 		const [cellOffsetX, cellOffsetY] = [
