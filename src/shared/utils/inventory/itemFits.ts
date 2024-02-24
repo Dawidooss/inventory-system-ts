@@ -11,7 +11,7 @@ export default function itemFits(grid: Grid, item: Item, position: [number, numb
 	if (position[0] < 0 || position[0] > grid.width - itemConfig.width) return false;
 	if (position[1] < 0 || position[1] > grid.height - itemConfig.height) return false;
 
-	for (let [id, otherItem] of Object.entries(grid.items)) {
+	for (let otherItem of grid.items) {
 		if (otherItem === item) {
 			if (otherItem.x === position[0] && otherItem.y === position[1]) return false;
 			continue;

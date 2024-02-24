@@ -2,6 +2,7 @@ import { Ref } from "@rbxts/react";
 import { createProducer } from "@rbxts/reflex";
 import { HttpService } from "@rbxts/services";
 import { findItem } from "shared/utils/inventory/findItem";
+import clientState from "./clientState";
 
 export interface InventoryProducer {
 	cellSize: number;
@@ -12,11 +13,12 @@ export interface InventoryProducer {
 
 	itemHolding?: Item;
 	itemHoldingId?: string;
-	itemHoldingOffset: Vector2;
+	itemHoldingOffset: [number, number];
+	itemHoldingCellOffset: [number, number];
 
 	hoveringGridId?: string;
 	hoveringCell?: [number, number];
-	hoveringItemsIds: string[];
+	hoveringItems: Item[];
 }
 
 const initialState: InventoryProducer = {
@@ -24,8 +26,9 @@ const initialState: InventoryProducer = {
 	inventories: {},
 	grids: {},
 	cellSize: 50,
-	itemHoldingOffset: Vector2.zero,
-	hoveringItemsIds: [],
+	itemHoldingOffset: [0, 0],
+	itemHoldingCellOffset: [0, 0],
+	hoveringItems: [],
 };
 
 const inventoryProducer = createProducer(initialState, {
@@ -49,26 +52,25 @@ const inventoryProducer = createProducer(initialState, {
 		hoveringGridId,
 	}),
 
-	setHoveringItem: (state: InventoryProducer, itemId: string, hovering: boolean) => {
-		state.hoveringItemsIds = state.hoveringItemsIds.filter((v) => v !== itemId);
+	setHoveringItem: (state: InventoryProducer, item: Item, hovering: boolean) => {
+		state.hoveringItems = state.hoveringItems.filter((v) => v !== item);
 		if (hovering === true) {
-			state.hoveringItemsIds.push(itemId);
+			state.hoveringItems.push(item);
 		}
-		return { ...state, hoveringItemsIds: [...state.hoveringItemsIds] };
+		return { ...state, hoveringItemsIds: [...state.hoveringItems] };
 	},
 
-	addItem: (state: InventoryProducer, gridId: string, itemId: string, item: Item) => {
-		state.grids[gridId].items[itemId] = item;
+	addItem: (state: InventoryProducer, gridId: string, item: Item) => {
+		state.grids[gridId].items.push(item);
 		return { ...state };
 	},
 
-	removeItem: (state: InventoryProducer, itemId: string) => {
-		const [item, gridId] = findItem(state.grids, itemId) || [];
+	removeItem: (state: InventoryProducer, item: Item) => {
+		const [_, gridId] = findItem(state.grids, item.id) || [];
 
 		if (gridId) {
 			state.grids[gridId] = { ...state.grids[gridId] };
-
-			delete state.grids[gridId].items[itemId];
+			state.grids[gridId].items = [...state.grids[gridId].items.filter((v) => v !== item)];
 		}
 		return { ...state, grids: { ...state.grids } };
 	},
@@ -91,32 +93,32 @@ const inventoryProducer = createProducer(initialState, {
 	) => {
 		state.itemHolding = itemHolding;
 		state.itemHoldingId = itemHoldingId;
-		state.itemHoldingOffset = itemHoldingOffset || Vector2.zero;
+		state.itemHoldingOffset = itemHoldingOffset || [0, 0];
+
+		const [cellOffsetX, cellOffsetY] = [
+			math.floor(-state.itemHoldingOffset[0] / state.cellSize),
+			math.floor(-state.itemHoldingOffset[1] / state.cellSize),
+		];
+		state.itemHoldingCellOffset = [cellOffsetX, cellOffsetY];
 
 		return { ...state };
 	},
 
-	moveItem: (state: InventoryProducer, itemId: string, targetGridId: string, targetPosition: [number, number]) => {
-		const [item, gridId] = findItem(state.grids, itemId) || [];
+	moveItem: (state: InventoryProducer, item: Item, targetGridId: string, targetPosition: [number, number]) => {
+		const [_, gridId] = findItem(state.grids, item.id) || [];
 
 		if (item && gridId && state.grids[gridId]) {
-			delete state.grids[gridId].items[itemId];
+			state.grids[gridId].items = state.grids[gridId].items.filter((v) => v !== item);
 			item.x = targetPosition[0];
 			item.y = targetPosition[1];
-			state.grids[targetGridId].items[itemId] = item;
+			state.grids[targetGridId].items.push(item);
 		}
 
 		return { ...state };
 	},
 
-	lockItem: (state: InventoryProducer, itemId: string, locked: boolean) => {
-		const [item, gridId] = findItem(state.grids, itemId) || [];
-
-		if (item && gridId) {
-			// state.grids = { ...state.grids };
-			// state.grids[gridId] = { ...state.grids[gridId] };
-			// state.grids[gridId].items = { ...state.grids[gridId].items };
-
+	lockItem: (state: InventoryProducer, item: Item, locked: boolean) => {
+		if (item) {
 			item.locked = locked;
 		}
 
@@ -125,6 +127,7 @@ const inventoryProducer = createProducer(initialState, {
 });
 
 export type Item = {
+	id: string;
 	quantity: number;
 	name: string;
 	x: number;
@@ -136,7 +139,7 @@ export type Grid = {
 	id: string;
 	width: number;
 	height: number;
-	items: { [id: string]: Item };
+	items: Item[];
 };
 
 export type InventoryMap = { [gridName: string]: string };

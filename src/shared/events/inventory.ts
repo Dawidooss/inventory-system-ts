@@ -3,6 +3,7 @@ import Red from "shared/utils/Networking/Red";
 import { Sedes } from "shared/utils/Networking/Sedes";
 
 const itemSerializer = new Sedes.Serializer<Item>([
+	["id", Sedes.ToString()],
 	["name", Sedes.ToString()],
 	["quantity", Sedes.ToUnsigned(64)],
 	["x", Sedes.ToUnsigned(8)],
@@ -13,7 +14,7 @@ const gridSerializer = new Sedes.Serializer<Grid>([
 	["id", Sedes.ToString()],
 	["height", Sedes.ToUnsigned(8)],
 	["width", Sedes.ToUnsigned(8)],
-	["items", Sedes.ToDict(Sedes.ToString(), itemSerializer)],
+	["items", Sedes.ToArray(itemSerializer)],
 ]);
 
 export namespace InventoryEvents {

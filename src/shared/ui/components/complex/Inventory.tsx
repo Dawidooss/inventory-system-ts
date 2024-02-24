@@ -53,11 +53,11 @@ export default function InventoryUI() {
 					Position={UDim2.fromScale(0.5, 0.8)}
 					Data={grids[localInventory?.backpack]}
 				/>
-				<Grid
+				{/* <Grid
 					Id={localInventory?.test}
 					Position={UDim2.fromScale(0.5, 0.4)}
 					Data={grids[localInventory?.test]}
-				/>
+				/> */}
 			</imagelabel>
 			{itemHolding && itemHoldingId ? (
 				<Item Id={itemHoldingId} Data={itemHolding} Holding={true} Offset={itemHoldingOffset} />

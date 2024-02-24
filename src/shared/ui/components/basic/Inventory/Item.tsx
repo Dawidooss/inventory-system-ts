@@ -10,13 +10,14 @@ type Props = {
 	Id: string;
 	Data: Item;
 	Holding?: boolean;
-	Offset?: Vector2;
+	Offset?: [number, number];
 	Locked?: boolean;
 };
 
 export default function Item(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const hoveringCell = useSelector((state: RootState) => state.inventoryProducer.hoveringCell);
+	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
 	const [transparency, transparencyAPI] = useMotor(0);
 	const imageRef = useRef<ImageButton>();
 	const mouse = useMouse();
@@ -26,27 +27,29 @@ export default function Item(props: Props) {
 	// detect if is hovering and update hoveringItem state
 	useEffect(() => {
 		if (!(props.Locked || clientState.getState().inventoryProducer.itemHoldingId === props.Id) && hoveringCell) {
+			let x = hoveringCell[0] + itemHoldingCellOffset[0];
+			let y = hoveringCell[1] + itemHoldingCellOffset[1];
+
 			if (
 				isPointInRect(
-					new Vector2(hoveringCell[0], hoveringCell[1]),
+					new Vector2(x, y),
 					new Vector2(props.Data.x, props.Data.y),
 					new Vector2(config.width - 1, config.height - 1),
 				)
 			) {
-				if (clientState.getState().inventoryProducer.hoveringItemsIds.find((v) => v !== props.Id)) {
-					print("xd");
-					clientState.setHoveringItem(props.Id, true);
-				}
+				if (!clientState.getState().inventoryProducer.hoveringItems.find((v) => v === props.Data))
+					clientState.setHoveringItem(props.Data, true);
 				return;
 			}
 		}
-		if (clientState.getState().inventoryProducer.hoveringItemsIds.find((v) => v === props.Id))
-			clientState.setHoveringItem(props.Id, false);
+		if (clientState.getState().inventoryProducer.hoveringItems.find((v) => v === props.Data)) {
+			clientState.setHoveringItem(props.Data, false);
+		}
 	}, [hoveringCell]);
 
 	let position: Binding<UDim2>;
 	if (props.Holding) {
-		position = mouse.map((p) => UDim2.fromOffset(p.X + (props.Offset?.X || 0), p.Y + (props.Offset?.Y || 0)));
+		position = mouse.map((p) => UDim2.fromOffset(p.X + (props.Offset?.[0] || 0), p.Y + (props.Offset?.[1] || 0)));
 	} else {
 		position = toBinding(UDim2.fromOffset(cellSize * props.Data.x, cellSize * props.Data.y));
 	}
@@ -81,9 +84,11 @@ export default function Item(props: Props) {
 			Event={{
 				MouseButton1Down: (rbx) => {
 					if (props.Locked) return;
+
 					const offset = rbx.AbsolutePosition.sub(mouse.getValue());
-					clientState.holdItem(props.Data, props.Id, offset);
-					clientState.setHoveringItem(props.Id, false);
+
+					clientState.holdItem(props.Data, props.Id, [offset.X, offset.Y]);
+					clientState.setHoveringItem(props.Data, false);
 				},
 			}}
 			ref={imageRef}

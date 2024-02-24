@@ -11,38 +11,42 @@ export default function useInventoryInput() {
 	const hoveringGridId = useSelector((state: RootState) => state.inventoryProducer.hoveringGridId);
 	const hoveringCell = useSelector((state: RootState) => state.inventoryProducer.hoveringCell);
 
-	const itemHoldingId = useSelector((state: RootState) => state.inventoryProducer.itemHoldingId);
-	const [itemHolding, itemHoldingGridId] = findItem(grids, itemHoldingId || "") || [];
+	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 
 	useEffect(() => {
 		const conn = UserInputService.InputEnded.Connect((input) => {
 			if (input.UserInputType === Enum.UserInputType.MouseButton1) {
-				if (itemHoldingId && hoveringCell && hoveringGridId && itemHolding && itemHoldingGridId) {
-					if (itemFits(grids[hoveringGridId], itemHolding, hoveringCell)) {
+				if (hoveringCell && hoveringGridId && itemHolding) {
+					// move
+
+					const [_, itemHoldingGridId] = findItem(grids, itemHolding.id);
+
+					if (itemHoldingGridId && itemFits(grids[hoveringGridId], itemHolding, hoveringCell)) {
 						const [lastX, lastY] = [itemHolding.x, itemHolding.y];
-						clientState.moveItem(itemHoldingId, hoveringGridId, hoveringCell);
-						clientState.lockItem(itemHoldingId, true);
+						clientState.moveItem(itemHolding, hoveringGridId, hoveringCell);
+						clientState.lockItem(itemHolding, true);
 
-						const mockupId = HttpService.GenerateGUID(false);
 						const mockup = { ...itemHolding, x: lastX, y: lastY };
+						mockup.id = HttpService.GenerateGUID(false);
 
-						clientState.addItem(itemHoldingGridId, mockupId, mockup);
-						clientState.lockItem(mockupId, true);
+						clientState.addItem(hoveringGridId, mockup);
+						clientState.lockItem(mockup, true);
 
 						InventoryEvents.functions.moveItem
 							.Call({
-								itemId: itemHoldingId,
+								itemId: itemHolding.id,
 								gridId: itemHoldingGridId,
 								targetGridId: hoveringGridId,
 								x: hoveringCell[0],
 								y: hoveringCell[1],
 							})
 							.After((succ, res) => {
-								clientState.removeItem(mockupId);
-								clientState.lockItem(itemHoldingId, false);
+								clientState.removeItem(mockup);
+								clientState.lockItem(itemHolding, false);
 								if (!succ) {
-									clientState.moveItem(itemHoldingId, itemHoldingGridId, [lastX, lastY]);
+									clientState.moveItem(itemHolding, itemHoldingGridId, [lastX, lastY]);
 								}
+								print(clientState.getState().inventoryProducer);
 							});
 					}
 				}
@@ -53,8 +57,7 @@ export default function useInventoryInput() {
 		});
 
 		return () => {
-			print("clean");
 			conn.Disconnect();
 		};
-	}, [itemHoldingId, hoveringCell, hoveringGridId, grids]);
+	}, [hoveringCell, hoveringGridId, grids]);
 }

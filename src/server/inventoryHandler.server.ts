@@ -16,29 +16,31 @@ Players.PlayerAdded.Connect((player) => {
 		id: backpackId,
 		width: 15,
 		height: 6,
-		items: {
-			[HttpService.GenerateGUID(false)]: {
+		items: [
+			{
+				id: HttpService.GenerateGUID(false),
 				name: "Szabla",
 				quantity: 1,
 				x: 0,
 				y: 0,
 				locked: false,
 			},
-			[HttpService.GenerateGUID(false)]: {
+			{
+				id: HttpService.GenerateGUID(false),
 				name: "Szabla",
 				quantity: 1,
 				x: 5,
 				y: 2,
 				locked: false,
 			},
-		},
+		],
 	};
 
 	grids[testId] = {
 		id: testId,
 		width: 6,
 		height: 6,
-		items: {},
+		items: [],
 	};
 
 	inventories[tostring(player.UserId)] = {
@@ -61,17 +63,17 @@ InventoryEvents.functions.moveItem.SetCallback((player, req) => {
 	assert(grid, `gridId ${req.gridId} doesn't exist`);
 	assert(targetGrid, `targetGridId ${req.gridId} doesn't exist`);
 
-	const item = grid.items[req.itemId];
+	const item = grid.items.find((v) => v.id === req.itemId);
 	assert(item, `item ${req.targetGridId} in grid doesn't exist`);
 	assert(item.locked === false, `item ${req.itemId} is locked`);
 
-	const fits = itemFits(targetGrid, grid.items[req.itemId], [req.x, req.y]);
+	const fits = itemFits(targetGrid, item, [req.x, req.y]);
 	assert(fits, `item doesn't fit in desired position`);
 
-	delete grid.items[req.itemId];
+	grid.items = grid.items.filter((v) => v.id !== req.itemId);
 	item.x = req.x;
 	item.y = req.y;
-	targetGrid.items[req.itemId] = item;
+	targetGrid.items.push(item);
 
 	return {};
 });

@@ -27,20 +27,19 @@ const camera = Workspace.CurrentCamera!;
 type ColorMap = { [key: number]: { [key: number]: Color3 } };
 
 export default function Grid(props: Props) {
-	const grids = useSelector((state: RootState) => state.inventoryProducer.grids);
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
+
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemHoldingId = useSelector((state: RootState) => state.inventoryProducer.itemHoldingId);
-	const itemHoldingOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingOffset);
-	const hoveringItemsIds = useSelector((state: RootState) => state.inventoryProducer.hoveringItemsIds);
-	const hoveringCell = useSelector((state: RootState) => state.inventoryProducer.hoveringCell);
+	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
 
-	const [colorMap, setColorMap] = useState<ColorMap>({});
+	const hoveringItems = useSelector((state: RootState) => state.inventoryProducer.hoveringItems);
+	const hoveringCell = useSelector((state: RootState) => state.inventoryProducer.hoveringCell);
+	const hoveringGridId = useSelector((state: RootState) => state.inventoryProducer.hoveringGridId);
 
 	const gridRef = useRef<Frame>();
 
 	const updateHoveringCell = () => {
-		// create newColorMap
 		if (!props.Data) return;
 
 		const grid = gridRef.current!;
@@ -48,34 +47,37 @@ export default function Grid(props: Props) {
 		const mouseLocation = UserInputService.GetMouseLocation();
 
 		if (isPointInRect(mouseLocation, grid.AbsolutePosition, grid.AbsoluteSize)) {
-			const gridOffset = mouseLocation.sub(grid.AbsolutePosition);
-			let [x, y] = [math.floor(gridOffset.X / cellSize), math.floor(gridOffset.Y / cellSize)];
+			const gridRelated = mouseLocation.sub(grid.AbsolutePosition);
+			let [x, y] = [math.floor(gridRelated.X / cellSize), math.floor(gridRelated.Y / cellSize)];
+			x -= itemHoldingCellOffset[0];
+			y -= itemHoldingCellOffset[1];
 
 			if (x >= 0 && y >= 0 && x < props.Data.width && y < props.Data.height) {
-				clientState.setHoveringCell(props.Id, [x, y]);
+				if (!(hoveringGridId === props.Id && hoveringCell?.[0] === x && hoveringCell?.[1] === y)) {
+					clientState.setHoveringCell(props.Id, [x, y]);
+				}
 				return;
 			}
 		}
-		if (clientState.getState().inventoryProducer.hoveringGridId === props.Id) clientState.setHoveringCell();
+		if (hoveringGridId === props.Id) {
+			clientState.setHoveringCell();
+		}
 	};
 
-	const updateColorMap = () => {
-		if (!props.Data) return;
-
-		let newColorMap: ColorMap = {};
+	let colorMap: ColorMap = {};
+	if (props.Data) {
 		for (let x of $range(0, props.Data.width - 1)) {
-			newColorMap[x] = {};
+			colorMap[x] = {};
 		}
 
 		if (itemHolding && hoveringCell) {
-			const otherHoveringItemId = hoveringItemsIds.filter((v) => v !== itemHoldingId)[0];
+			const otherHoveringItem = hoveringItems.filter((v) => v !== itemHolding)[0];
 			const itemConfig = getItemConfig(itemHolding?.name);
-			let [x, y] = [hoveringCell?.[0], hoveringCell?.[1]];
+			let [x, y] = [hoveringCell[0], hoveringCell[1]];
 
 			// merge stuff
 			let merged = false;
-			if (otherHoveringItemId) {
-				const [otherHoveringItem] = findItem(grids, otherHoveringItemId);
+			if (otherHoveringItem) {
 				if (
 					otherHoveringItem &&
 					otherHoveringItem.name === itemHolding.name &&
@@ -83,7 +85,7 @@ export default function Grid(props: Props) {
 				) {
 					for (let sX of $range(0, itemConfig.width - 1)) {
 						for (let sY of $range(0, itemConfig.height - 1)) {
-							newColorMap[otherHoveringItem.x + sX][otherHoveringItem.y + sY] = Color3.fromRGB(0, 255, 0); //prettier-ignore
+							colorMap[otherHoveringItem.x + sX][otherHoveringItem.y + sY] = Color3.fromRGB(0, 255, 0); //prettier-ignore
 							merged = true;
 						}
 					}
@@ -101,7 +103,7 @@ export default function Grid(props: Props) {
 						if (x + sX >= props.Data.width || y + sY >= props.Data.height || x + sX < 0 || y + sY < 0)
 							continue;
 
-						newColorMap[x + sX][y + sY] = fits ? Color3.fromRGB(0, 255, 0) : Color3.fromRGB(255, 0, 0);
+						colorMap[x + sX][y + sY] = fits ? Color3.fromRGB(0, 255, 0) : Color3.fromRGB(255, 0, 0);
 					}
 				}
 			}
@@ -113,24 +115,19 @@ export default function Grid(props: Props) {
 			for (let sX of $range(0, itemConfig.width - 1)) {
 				for (let sY of $range(0, itemConfig.height - 1)) {
 					// don't override other colors
-					if (newColorMap[item.x + sX][item.y + sY]) continue;
-					newColorMap[item.x + sX][item.y + sY] = Color3.fromRGB(255, 175, 78);
+					if (colorMap[item.x + sX][item.y + sY]) continue;
+					colorMap[item.x + sX][item.y + sY] = Color3.fromRGB(255, 175, 78);
 				}
 			}
 		}
-
-		setColorMap(newColorMap);
-	};
-
+	}
 	useEffect(() => {
 		updateHoveringCell();
-		updateColorMap();
 	}, [itemHoldingId, props.Data, hoveringCell]);
 
 	useMouse(() => {
-		if (itemHoldingOffset) {
+		if (itemHoldingCellOffset) {
 			updateHoveringCell();
-			updateColorMap();
 		}
 	});
 
@@ -154,8 +151,8 @@ export default function Grid(props: Props) {
 							return <Cell key={v} Color={colorMap[x] && colorMap[x][y]} />;
 						})}
 					</Full>
-					{Object.entries(props.Data!.items).map(([id, v]) => (
-						<Item key={id} Data={v} Id={id} Locked={id === itemHoldingId || v.locked} />
+					{props.Data!.items.map((v) => (
+						<Item key={v.id} Data={v} Id={v.id} Locked={v.id === itemHoldingId || v.locked} />
 					))}
 				</frame>
 			) : (

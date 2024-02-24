@@ -14,29 +14,16 @@ export = (target: Frame): (() => void) => {
 		id: backpackId,
 		width: 15,
 		height: 6,
-		items: {
-			[HttpService.GenerateGUID(false)]: {
-				name: "Szabla",
-				quantity: 1,
-				x: 0,
-				y: 0,
-				locked: false,
-			},
-			[HttpService.GenerateGUID(false)]: {
+		items: [
+			{
+				id: HttpService.GenerateGUID(false),
 				name: "Patyk",
 				quantity: 3,
-				x: 4,
-				y: 2,
+				x: 1,
+				y: 1,
 				locked: false,
 			},
-			[HttpService.GenerateGUID(false)]: {
-				name: "Patyk",
-				quantity: 3,
-				x: 7,
-				y: 2,
-				locked: false,
-			},
-		},
+		],
 	});
 
 	clientState.setInventory(tostring(Players.LocalPlayer.UserId), {

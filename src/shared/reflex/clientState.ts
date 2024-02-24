@@ -1,4 +1,4 @@
-import { InferState, combineProducers, createProducer } from "@rbxts/reflex";
+import { InferState, combineProducers } from "@rbxts/reflex";
 import inventoryProducer from "./inventoryProducer";
 import { UseProducerHook, useProducer } from "@rbxts/react-reflex";
 
