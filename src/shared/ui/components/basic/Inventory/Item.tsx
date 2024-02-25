@@ -5,6 +5,8 @@ import clientState, { RootState } from "shared/reflex/clientState";
 import { Item } from "shared/reflex/inventoryProducer";
 import getItemConfig from "shared/inventory/getItemConfig";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
+import Text from "../Text";
+import { GuiService } from "@rbxts/services";
 
 type Props = {
 	Data: Item;
@@ -15,7 +17,7 @@ type Props = {
 
 export default function Item(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
-	const hoveringCell = useSelector((state: RootState) => state.inventoryProducer.hoveringCell);
+	const cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
 	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
 
 	const [transparency, transparencyAPI] = useMotor(0);
@@ -24,31 +26,27 @@ export default function Item(props: Props) {
 
 	const config = getItemConfig(props.Data);
 
-	// detect if is hovering and update hoveringItem state
+	// detect if is hovering and update itemsHovering state
 	useEffect(() => {
 		if (
 			!(props.Locked || clientState.getState().inventoryProducer.itemHolding?.id === props.Data.id) &&
-			hoveringCell
+			cellHovering
 		) {
-			let x = hoveringCell[0] + itemHoldingCellOffset[0];
-			let y = hoveringCell[1] + itemHoldingCellOffset[1];
-
 			if (
 				isPointInRect(
-					new Vector2(x, y),
+					new Vector2(cellHovering[0], cellHovering[1]),
 					new Vector2(props.Data.x, props.Data.y),
 					new Vector2(config.width - 1, config.height - 1),
 				)
 			) {
-				if (!clientState.getState().inventoryProducer.hoveringItems.find((v) => v === props.Data))
-					clientState.setHoveringItem(props.Data, true);
+				if (!clientState.getState().inventoryProducer.itemsHovering.find((v) => v === props.Data))
+					clientState.setItemHovering(props.Data, true);
 				return;
 			}
 		}
-		if (clientState.getState().inventoryProducer.hoveringItems.find((v) => v === props.Data)) {
-			clientState.setHoveringItem(props.Data, false);
-		}
-	}, [hoveringCell]);
+		if (clientState.getState().inventoryProducer.itemsHovering.find((v) => v === props.Data))
+			clientState.setItemHovering(props.Data, false);
+	}, [cellHovering]);
 
 	let position: Binding<UDim2>;
 	if (props.Holding) {
@@ -67,17 +65,9 @@ export default function Item(props: Props) {
 			ImageTransparency={transparency.map((v) => {
 				if (props.Locked) {
 					if (v === 0) {
-						transparencyAPI(
-							new Linear(1, {
-								velocity: 1.5,
-							}),
-						);
+						transparencyAPI(new Linear(1, { velocity: 1.2 }));
 					} else if (v === 1) {
-						transparencyAPI(
-							new Linear(0, {
-								velocity: 1.5,
-							}),
-						);
+						transparencyAPI(new Linear(0, { velocity: 1.2 }));
 					}
 				} else {
 					transparencyAPI(new Instant(0));
@@ -88,13 +78,22 @@ export default function Item(props: Props) {
 				MouseButton1Down: (rbx) => {
 					if (props.Locked) return;
 
-					const offset = rbx.AbsolutePosition.sub(mouse.getValue());
+					const offset = rbx.AbsolutePosition.sub(mouse.getValue()).add(GuiService.GetGuiInset()[0]);
 
 					clientState.holdItem(props.Data, [offset.X, offset.Y]);
-					clientState.setHoveringItem(props.Data, false);
+					clientState.setItemHovering(props.Data, false);
 				},
 			}}
 			ref={imageRef}
-		></imagebutton>
+		>
+			{props.Data.quantity > 1 && !props.Locked && (
+				<Text
+					Text={`${props.Data.quantity}`}
+					Position={new UDim2(0, -cellSize / 8, 1, -cellSize / 1.6)}
+					TextXAlignment={Enum.TextXAlignment.Right}
+					Size={new UDim2(1, 0, 0, cellSize / 1.75)}
+				/>
+			)}
+		</imagebutton>
 	);
 }

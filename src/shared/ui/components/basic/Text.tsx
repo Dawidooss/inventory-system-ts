@@ -6,6 +6,7 @@ type Props = {
 	Size: UDim2;
 	Color?: Color3;
 	TextXAlignment?: Enum.TextXAlignment;
+	Transparency?: number;
 };
 
 export default function Text(props: Props) {
@@ -19,7 +20,7 @@ export default function Text(props: Props) {
 			TextScaled={true}
 			BackgroundTransparency={1}
 			TextXAlignment={props.TextXAlignment || Enum.TextXAlignment.Left}
-			TextTransparency={0.4}
+			TextTransparency={props.Transparency || 0.4}
 		/>
 	);
 }

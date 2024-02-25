@@ -1,6 +1,8 @@
 import { HttpService, Players } from "@rbxts/services";
 import { InventoryEvents } from "shared/events/inventory";
+import getItemConfig from "shared/inventory/getItemConfig";
 import { Grid } from "shared/reflex/inventoryProducer";
+import canMerge from "shared/utils/inventory/canMerge";
 import itemFits from "shared/utils/inventory/itemFits";
 
 const grids: { [gridId: string]: Grid } = {};
@@ -19,16 +21,16 @@ Players.PlayerAdded.Connect((player) => {
 		items: [
 			{
 				id: HttpService.GenerateGUID(false),
-				name: "Szabla",
-				quantity: 1,
+				name: "Patyk",
+				quantity: 2,
 				x: 0,
 				y: 0,
 				locked: false,
 			},
 			{
 				id: HttpService.GenerateGUID(false),
-				name: "Szabla",
-				quantity: 1,
+				name: "Patyk",
+				quantity: 4,
 				x: 5,
 				y: 2,
 				locked: false,
@@ -74,6 +76,38 @@ InventoryEvents.functions.moveItem.SetCallback((player, req) => {
 	item.x = req.x;
 	item.y = req.y;
 	targetGrid.items.push(item);
+
+	return {};
+});
+
+InventoryEvents.functions.mergeItems.SetCallback((player, req) => {
+	const grid = grids[req.gridId];
+	const targetGrid = grids[req.targetGridId];
+
+	const start = tick();
+	assert(grid, `gridId ${req.gridId} doesn't exist`);
+	assert(targetGrid, `targetGridId ${req.gridId} doesn't exist`);
+
+	const item = grid.items.find((v) => v.id === req.itemId);
+	assert(item, `item ${req.itemId} in grid doesn't exist`);
+	assert(item.locked === false, `item ${req.itemId} is locked`);
+
+	const targetItem = targetGrid.items.find((v) => v.id === req.targetItemId);
+	assert(targetItem, `item ${req.targetGridId} in grid doesn't exist`);
+	assert(targetItem.locked === false, `item ${req.targetGridId} is locked`);
+
+	assert(canMerge(item, targetItem), `cannot merge`);
+
+	const config = getItemConfig(item);
+	const toMove = math.clamp(config.max - targetItem.quantity, 0, item.quantity);
+
+	item.quantity -= toMove;
+	targetItem.quantity += toMove;
+
+	// moved whole item, remove him
+	if (item.quantity <= 0) {
+		grid.items = grid.items.filter((v) => v !== item);
+	}
 
 	return {};
 });

@@ -5,10 +5,8 @@ import { ReflexProvider } from "@rbxts/react-reflex";
 
 export default function Router() {
 	return (
-		<StrictMode>
-			<ReflexProvider producer={clientState}>
-				<InventoryUI />
-			</ReflexProvider>
-		</StrictMode>
+		<ReflexProvider producer={clientState}>
+			<InventoryUI />
+		</ReflexProvider>
 	);
 }

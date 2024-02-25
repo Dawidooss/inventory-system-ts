@@ -1,8 +1,11 @@
 import { Ref } from "@rbxts/react";
 import { createProducer } from "@rbxts/reflex";
-import { HttpService } from "@rbxts/services";
+import { HttpService, Workspace } from "@rbxts/services";
 import { findItem } from "shared/utils/inventory/findItem";
 import clientState from "./clientState";
+import getItemConfig from "shared/inventory/getItemConfig";
+
+const camera = Workspace.CurrentCamera!;
 
 export interface InventoryProducer {
 	cellSize: number;
@@ -15,19 +18,19 @@ export interface InventoryProducer {
 	itemHoldingOffset: [number, number];
 	itemHoldingCellOffset: [number, number];
 
-	hoveringGridId?: string;
-	hoveringCell?: [number, number];
-	hoveringItems: Item[];
+	gridHoveringId?: string;
+	cellHovering?: [number, number];
+	itemsHovering: Item[];
 }
 
 const initialState: InventoryProducer = {
 	splitting: false,
 	inventories: {},
 	grids: {},
-	cellSize: 50,
+	cellSize: camera.ViewportSize.Y * (50 / 1080),
 	itemHoldingOffset: [0, 0],
 	itemHoldingCellOffset: [0, 0],
-	hoveringItems: [],
+	itemsHovering: [],
 };
 
 const inventoryProducer = createProducer(initialState, {
@@ -41,27 +44,27 @@ const inventoryProducer = createProducer(initialState, {
 		splitting,
 	}),
 
-	setHoveringCell: (
+	setCellHovering: (
 		state: InventoryProducer,
-		hoveringGridId?: InventoryProducer["hoveringGridId"],
-		hoveringCell?: InventoryProducer["hoveringCell"],
+		gridHoveringId?: InventoryProducer["gridHoveringId"],
+		cellHovering?: InventoryProducer["cellHovering"],
 	) => ({
 		...state,
-		hoveringCell,
-		hoveringGridId,
+		gridHoveringId,
+		cellHovering,
 	}),
 
-	setHoveringItem: (state: InventoryProducer, item: Item, hovering: boolean) => {
-		state.hoveringItems = state.hoveringItems.filter((v) => v !== item);
+	setItemHovering: (state: InventoryProducer, item: Item, hovering: boolean) => {
+		state.itemsHovering = state.itemsHovering.filter((v) => v !== item);
 		if (hovering === true) {
-			state.hoveringItems.push(item);
+			state.itemsHovering.push(item);
 		}
-		return { ...state, hoveringItemsIds: [...state.hoveringItems] };
+		return { ...state, hoveringItemsIds: [...state.itemsHovering] };
 	},
 
 	addItem: (state: InventoryProducer, gridId: string, item: Item) => {
 		state.grids[gridId].items.push(item);
-		return { ...state };
+		return { ...state, grids: { ...state.grids } };
 	},
 
 	removeItem: (state: InventoryProducer, item: Item) => {
@@ -76,12 +79,12 @@ const inventoryProducer = createProducer(initialState, {
 
 	setGrid: (state: InventoryProducer, id: string, data: Grid) => {
 		state.grids[id] = data;
-		return { ...state };
+		return { ...state, grids: { ...state.grids } };
 	},
 
 	setInventory: (state: InventoryProducer, inventoryId: string, inventoryMap: InventoryMap) => {
 		state.inventories[inventoryId] = inventoryMap;
-		return { ...state };
+		return { ...state, inventories: { ...state.inventories } };
 	},
 
 	holdItem: (
@@ -98,26 +101,46 @@ const inventoryProducer = createProducer(initialState, {
 		];
 		state.itemHoldingCellOffset = [cellOffsetX, cellOffsetY];
 
-		return { ...state };
+		return { ...state, grids: { ...state.grids } };
 	},
 
 	moveItem: (state: InventoryProducer, item: Item, targetGridId: string, targetPosition: [number, number]) => {
-		const [_, gridId] = findItem(state.grids, item.id) || [];
+		const [_, gridId] = findItem(state.grids, item.id);
 
-		if (item && gridId && state.grids[gridId]) {
+		if (gridId && state.grids[gridId]) {
 			state.grids[gridId].items = state.grids[gridId].items.filter((v) => v !== item);
 			item.x = targetPosition[0];
 			item.y = targetPosition[1];
 			state.grids[targetGridId].items.push(item);
 		}
 
-		return { ...state };
+		return { ...state, grids: { ...state.grids } };
+	},
+
+	mergeItems: (state: InventoryProducer, item: Item, targetItem: Item) => {
+		const config = getItemConfig(item);
+		const toMove = math.clamp(config.max - targetItem.quantity, 0, item.quantity);
+
+		item.quantity -= toMove;
+		targetItem.quantity += toMove;
+
+		// moved whole item, remove him
+		if (item.quantity <= 0) {
+			const [_, gridId] = findItem(state.grids, item.id);
+			state.grids[gridId!].items = state.grids[gridId!].items.filter((v) => v !== item);
+		}
+
+		return { ...state, grids: { ...state.grids } };
 	},
 
 	lockItem: (state: InventoryProducer, item: Item, locked: boolean) => {
-		if (item) {
-			item.locked = locked;
-		}
+		item.locked = locked;
+
+		return { ...state, grids: { ...state.grids } };
+	},
+
+	setItemQuantity: (state: InventoryProducer, item: Item, quantity: number) => {
+		item.quantity = quantity;
 
 		return { ...state, grids: { ...state.grids } };
 	},

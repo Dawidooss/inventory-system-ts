@@ -1,4 +1,4 @@
-import { HttpService, Players, RunService, UserInputService, Workspace } from "@rbxts/services";
+import { GuiService, HttpService, Players, RunService, UserInputService, Workspace } from "@rbxts/services";
 import Text from "../basic/Text";
 import Grid from "../basic/Inventory/Grid";
 import inventoryProducer from "shared/reflex/inventoryProducer";
@@ -25,11 +25,13 @@ export default function InventoryUI() {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemHoldingOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingOffset);
 
+	const guiInset = GuiService.GetGuiInset()[0];
+
 	useInventoryInput();
 
 	useViewport(() => {
 		const conn = camera.GetPropertyChangedSignal("ViewportSize").Connect(() => {
-			clientState.setCellSize(camera.ViewportSize.X * (50 / 1920));
+			clientState.setCellSize(camera.ViewportSize.Y * (50 / 1080));
 		});
 
 		return () => {
@@ -47,18 +49,26 @@ export default function InventoryUI() {
 			>
 				<uiaspectratioconstraint AspectRatio={0.85} />
 				<Text Text={"EKWIPUNEK"} Position={UDim2.fromScale(0.07, 0.05)} Size={UDim2.fromScale(0.534, 0.06)} />
+				<Grid Position={UDim2.fromScale(0.5, 0.8)} Data={grids[localInventory?.backpack]} />
 				<Grid
-					Id={localInventory?.backpack}
-					Position={UDim2.fromScale(0.5, 0.8)}
-					Data={grids[localInventory?.backpack]}
-				/>
-				{/* <Grid
-					Id={localInventory?.test}
 					Position={UDim2.fromScale(0.5, 0.4)}
-					Data={grids[localInventory?.test]}
-				/> */}
+					Data={{
+						id: "giganiga",
+						width: 5,
+						height: 5,
+						items: [],
+					}}
+				/>
 			</imagelabel>
-			{itemHolding ? <Item Data={itemHolding} Holding={true} Offset={itemHoldingOffset} /> : <Full />}
+			{itemHolding ? (
+				<Item
+					Data={itemHolding}
+					Holding={true}
+					Offset={[itemHoldingOffset[0] - guiInset.X, itemHoldingOffset[1] - guiInset.Y]}
+				/>
+			) : (
+				<Full />
+			)}
 		</Full>
 	);
 }

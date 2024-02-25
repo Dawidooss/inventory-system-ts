@@ -40,11 +40,24 @@ export namespace InventoryEvents {
 			["x", Sedes.ToUnsigned(8)],
 			["y", Sedes.ToUnsigned(8)],
 		]),
+
+		mergeItemsIn: new Sedes.Serializer<{
+			itemId: string;
+			gridId: string;
+			targetItemId: string;
+			targetGridId: string;
+		}>([
+			["itemId", Sedes.ToString()],
+			["gridId", Sedes.ToString()],
+			["targetItemId", Sedes.ToString()],
+			["targetGridId", Sedes.ToString()],
+		]),
 	};
 	export const events = {};
 
 	export const functions = {
 		fetchInventory: Red.Function("fetchGrid", serializers.fetchInventoryIn, serializers.fetchInventoryOut),
 		moveItem: Red.Function("moveItem", serializers.moveItemIn, Sedes.NoSerializer),
+		mergeItems: Red.Function("mergeItems", serializers.mergeItemsIn, Sedes.NoSerializer),
 	};
 }

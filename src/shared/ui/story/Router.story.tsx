@@ -23,6 +23,15 @@ export = (target: Frame): (() => void) => {
 				y: 1,
 				locked: false,
 			},
+
+			{
+				id: HttpService.GenerateGUID(false),
+				name: "Patyk",
+				quantity: 4,
+				x: 3,
+				y: 1,
+				locked: false,
+			},
 		],
 	});
 
