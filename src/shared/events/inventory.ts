@@ -12,8 +12,6 @@ const itemSerializer = new Sedes.Serializer<Item>([
 ]);
 const gridSerializer = new Sedes.Serializer<Grid>([
 	["id", Sedes.ToString()],
-	["height", Sedes.ToUnsigned(8)],
-	["width", Sedes.ToUnsigned(8)],
 	["items", Sedes.ToArray(itemSerializer)],
 ]);
 

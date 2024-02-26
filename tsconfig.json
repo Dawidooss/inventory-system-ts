@@ -5,7 +5,7 @@
 		"downlevelIteration": true,
 		"jsx": "react",
 		"jsxFactory": "React.createElement",
-		"jsxFragmentFactory": "React.createFragment",
+		"jsxFragmentFactory": "React.Fragment",
 		"module": "commonjs",
 		"moduleResolution": "Node",
 		"noLib": true,

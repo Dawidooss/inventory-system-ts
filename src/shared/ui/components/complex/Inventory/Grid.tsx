@@ -8,10 +8,11 @@ import { Grid } from "shared/reflex/inventoryProducer";
 import canMerge from "shared/utils/inventory/canMerge";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import itemFits from "shared/utils/inventory/itemFits";
-import Full from "../Full";
-import LoadingCircle from "../LoadingCircle";
+import Full from "../../basic/Full";
+import LoadingCircle from "../../basic/LoadingCircle";
 import Cell from "./Cell";
 import Item from "./Item";
+import Splitting from "./Splitting";
 
 type Props = {
 	Position: UDim2;
@@ -22,6 +23,7 @@ type Props = {
 type ColorMap = { [key: number]: { [key: number]: Color3 } };
 export default function Grid(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
+	const splitting = useSelector((state: RootState) => !!state.inventoryProducer.splitting);
 
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
@@ -91,18 +93,16 @@ export default function Grid(props: Props) {
 			y -= itemHoldingCellOffset[1];
 
 			if (targetItem) {
-				print(targetItem);
 				// merge case
-				if (canMerge(itemHolding, targetItem)) {
-					for (let sX of $range(0, itemConfig.width - 1)) {
-						for (let sY of $range(0, itemConfig.height - 1)) {
-							colorMap[targetItem.x + sX][targetItem.y + sY] = Color3.fromRGB(0, 255, 0); //prettier-ignore
-						}
+				const _canMerge = canMerge(itemHolding, targetItem);
+				for (let sX of $range(0, itemConfig.width - 1)) {
+					for (let sY of $range(0, itemConfig.height - 1)) {
+						colorMap[targetItem.x + sX][targetItem.y + sY] = _canMerge ? Color3.fromRGB(0, 255, 0) : Color3.fromRGB(255,0,0); //prettier-ignore
 					}
 				}
 			} else {
 				// move case
-				const fits = itemFits(props.Data, itemHolding, [x, y]);
+				const fits = itemFits(props.Data, itemHolding, [x, y], splitting);
 
 				// loop cells and update colors
 				for (let sX of $range(0, itemConfig.width - 1)) {

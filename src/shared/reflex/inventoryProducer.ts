@@ -1,13 +1,13 @@
-import { Ref } from "@rbxts/react";
 import { createProducer } from "@rbxts/reflex";
-import { HttpService, Workspace } from "@rbxts/services";
-import { findItem } from "shared/utils/inventory/findItem";
-import clientState from "./clientState";
+import { Workspace } from "@rbxts/services";
+import { GridConfig } from "shared/data/gridConfigs";
 import getItemConfig from "shared/inventory/getItemConfig";
+import { findItem } from "shared/utils/inventory/findItem";
 
 const camera = Workspace.CurrentCamera!;
 
 export interface InventoryProducer {
+	visible: boolean;
 	cellSize: number;
 	splitting?: [number, number, Item, (success: boolean, quantity: number) => void];
 
@@ -24,6 +24,7 @@ export interface InventoryProducer {
 }
 
 const initialState: InventoryProducer = {
+	visible: true,
 	inventories: {},
 	grids: {},
 	cellSize: math.floor(camera.ViewportSize.Y * (50 / 1080)),
@@ -36,6 +37,11 @@ const inventoryProducer = createProducer(initialState, {
 	setCellSize: (state: InventoryProducer, cellSize: InventoryProducer["cellSize"]) => ({
 		...state,
 		cellSize,
+	}),
+
+	showInventory: (state: InventoryProducer, visible: InventoryProducer["visible"]) => ({
+		...state,
+		visible,
 	}),
 
 	setSplitting: (state: InventoryProducer, splitting?: InventoryProducer["splitting"]) => ({
@@ -173,8 +179,7 @@ export type Item = {
 
 export type Grid = {
 	id: string;
-	width: number;
-	height: number;
+	type: keyof ;
 	items: Item[];
 };
 

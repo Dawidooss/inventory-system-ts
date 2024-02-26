@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef } from "@rbxts/react";
-import Text from "../Text";
+import Text from "../../basic/Text";
 import useSlider from "shared/ui/hooks/useSlider";
-import Button from "../Button";
+import Button from "../../basic/Button";
 import { useSelector } from "@rbxts/react-reflex";
 import clientState, { RootState } from "shared/reflex/clientState";
 import getItemConfig from "shared/inventory/getItemConfig";
-import Full from "../Full";
+import Full from "../../basic/Full";
 import { SliderConfig } from "shared/utils/Slider";
 
 type Props = {};

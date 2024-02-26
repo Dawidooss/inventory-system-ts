@@ -75,17 +75,12 @@ InventoryEvents.functions.moveItem.SetCallback((player, req) => {
 		`quantity to move is bigger than item quantity ${req.quantity} > ${item.quantity}`,
 	);
 
-	const fits = itemFits(targetGrid, item, [req.x, req.y]);
+	const splitting = req.quantity !== item.quantity;
+	const fits = itemFits(targetGrid, item, [req.x, req.y], splitting);
 	check(fits, `item doesn't fit in desired position`);
 
 	let newItemId = "";
-	if (req.quantity === item.quantity) {
-		// move whole item
-		grid.items = grid.items.filter((v) => v.id !== req.itemId);
-		item.x = req.x;
-		item.y = req.y;
-		targetGrid.items.push(item);
-	} else {
+	if (splitting) {
 		// split
 		item.quantity -= req.quantity;
 		newItemId = HttpService.GenerateGUID(false);
@@ -96,6 +91,12 @@ InventoryEvents.functions.moveItem.SetCallback((player, req) => {
 			quantity: req.quantity,
 			id: newItemId,
 		});
+	} else {
+		// move whole item
+		grid.items = grid.items.filter((v) => v.id !== req.itemId);
+		item.x = req.x;
+		item.y = req.y;
+		targetGrid.items.push(item);
 	}
 
 	return {

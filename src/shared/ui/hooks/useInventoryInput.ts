@@ -18,14 +18,19 @@ export default function useInventoryInput() {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemsHovering = useSelector((state: RootState) => state.inventoryProducer.itemsHovering);
 
-	const leftControl = useKeyPress(["LeftControl"]);
+	const splitting = useKeyPress(["LeftControl"]);
 	const guiInset = GuiService.GetGuiInset()[0];
+
+	const showInventoryKeyPressed = useKeyPress(["E"]);
+	useEffect(() => {
+		if (!showInventoryKeyPressed) return;
+		clientState.showInventory(!clientState.getState().inventoryProducer.visible);
+	}, [showInventoryKeyPressed]);
 
 	const getQuantityToWorkWith = useCallback(
 		(item: Item): [boolean, number] => {
-			print(leftControl);
-			if (!leftControl || item.quantity <= 1) return [true, item.quantity];
-			if (!leftControl || item.quantity === 2) return [true, 1];
+			if (!splitting || item.quantity <= 1) return [true, item.quantity];
+			if (!splitting || item.quantity === 2) return [true, 1];
 
 			let success, quantity;
 			const mouseLocation = UserInputService.GetMouseLocation();
@@ -42,7 +47,7 @@ export default function useInventoryInput() {
 
 			return [success!, quantity!];
 		},
-		[leftControl],
+		[splitting],
 	);
 
 	const merge = useCallback(
@@ -79,7 +84,7 @@ export default function useInventoryInput() {
 					clientState.mergeItems(item, targetItem, quantity);
 				});
 		},
-		[grids, leftControl],
+		[grids, splitting],
 	);
 
 	const move = useCallback(
@@ -118,7 +123,7 @@ export default function useInventoryInput() {
 					clientState.moveItem(item, targetGridId, [x, y], quantity, res.newItemId);
 				});
 		},
-		[grids, leftControl],
+		[grids, splitting],
 	);
 
 	useEffect(() => {
@@ -138,7 +143,7 @@ export default function useInventoryInput() {
 
 				if (targetItem && targetItemGridId && canMerge(itemHolding, targetItem)) {
 					merge(itemHolding, targetItem);
-				} else if (itemFits(grids[gridHoveringId], itemHolding, targetCell)) {
+				} else if (itemFits(grids[gridHoveringId], itemHolding, targetCell, splitting)) {
 					move(itemHolding, gridHoveringId, targetCell[0], targetCell[1]);
 				}
 			}
@@ -149,5 +154,5 @@ export default function useInventoryInput() {
 		return () => {
 			conn.Disconnect();
 		};
-	}, [cellHovering, gridHoveringId, grids, itemsHovering, leftControl]);
+	}, [cellHovering, gridHoveringId, grids, itemsHovering, splitting]);
 }

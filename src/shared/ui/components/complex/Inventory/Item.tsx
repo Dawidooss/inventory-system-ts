@@ -6,7 +6,7 @@ import getItemConfig from "shared/inventory/getItemConfig";
 import clientState, { RootState } from "shared/reflex/clientState";
 import { Item } from "shared/reflex/inventoryProducer";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
-import Text from "../Text";
+import Text from "../../basic/Text";
 
 type Props = {
 	Data: Item;

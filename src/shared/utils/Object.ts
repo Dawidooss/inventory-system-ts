@@ -8,4 +8,12 @@ export namespace Object {
 
 		return array;
 	}
+
+	export function keys<T extends object>(obj: T): (keyof T)[] {
+		const keys: (keyof T)[] = [];
+		for (const key in obj) {
+			keys.push(key);
+		}
+		return keys;
+	}
 }

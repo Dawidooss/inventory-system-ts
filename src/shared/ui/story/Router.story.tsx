@@ -12,8 +12,7 @@ export = (target: Frame): (() => void) => {
 
 	clientState.setGrid(backpackId, {
 		id: backpackId,
-		width: 15,
-		height: 6,
+		type: "backpack",
 		items: [
 			{
 				id: HttpService.GenerateGUID(false),
