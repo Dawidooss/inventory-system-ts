@@ -9,7 +9,7 @@ const camera = Workspace.CurrentCamera!;
 
 export interface InventoryProducer {
 	cellSize: number;
-	splitting?: [number, number, (success: boolean, quantity: number) => void];
+	splitting?: [number, number, Item, (success: boolean, quantity: number) => void];
 
 	inventories: { [id: string]: InventoryMap };
 	grids: { [id: string]: Grid };

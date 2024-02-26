@@ -26,9 +26,11 @@ export interface Slider {
 	GetIncrement(): number;
 	Destroy(): void;
 
-	Changed: Signal<() => any>;
+	Changed: Signal<(newValue: number) => any>;
+	Dragged: Signal<(newValue: number) => any>;
+	Released: Signal<(newValue: number) => any>;
 }
 
-declare const Slider: Slider
+declare const Slider: Slider;
 
 export default Slider;

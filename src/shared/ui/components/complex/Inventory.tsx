@@ -9,6 +9,7 @@ import Grid from "../basic/Inventory/Grid";
 import Item from "../basic/Inventory/Item";
 import Text from "../basic/Text";
 import Splitting from "../basic/Inventory/Splitting";
+import getItemConfig from "shared/inventory/getItemConfig";
 
 const camera = Workspace.CurrentCamera!;
 

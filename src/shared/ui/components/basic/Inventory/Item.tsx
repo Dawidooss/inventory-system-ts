@@ -18,7 +18,7 @@ type Props = {
 export default function Item(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
-	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
+	const isSplitting = useSelector((state: RootState) => !!state.inventoryProducer.splitting);
 
 	const [transparency, transparencyAPI] = useMotor(0);
 	const imageRef = useRef<ImageButton>();
@@ -77,6 +77,7 @@ export default function Item(props: Props) {
 			Event={{
 				MouseButton1Down: (rbx) => {
 					if (props.Locked) return;
+					if (isSplitting) return;
 
 					const offset = rbx.AbsolutePosition.sub(mouse.getValue()).add(GuiService.GetGuiInset()[0]);
 

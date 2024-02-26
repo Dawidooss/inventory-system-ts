@@ -10,9 +10,10 @@ export default function useSlider(sliderRef: MutableRefObject<any>, config: Slid
 			setSlider(slider);
 		}
 		return () => {
+			slider?.Destroy();
 			setSlider(undefined);
 		};
-	}, [sliderRef]);
+	}, []);
 
 	return slider;
 }

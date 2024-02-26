@@ -20,7 +20,7 @@ export default function useInventoryInput() {
 
 	const leftShift = useKeyPress(["LeftControl"]);
 
-	const merge = (item: Item, targetItem: Item, quantity: number) => {
+	const merge = async (item: Item, targetItem: Item, quantity: number) => {
 		const [, itemGridId] = findItem(grids, item.id);
 		const [, targetGridId] = findItem(grids, targetItem.id);
 
@@ -43,7 +43,7 @@ export default function useInventoryInput() {
 			});
 	};
 
-	const move = (item: Item, targetGridId: string, x: number, y: number, quantity: number) => {
+	const move = async (item: Item, targetGridId: string, x: number, y: number, quantity: number) => {
 		const [_, itemGridId] = findItem(grids, item.id);
 		clientState.lockItem(item, true);
 
@@ -86,6 +86,17 @@ export default function useInventoryInput() {
 				const targetItem: Item | undefined = itemsHovering.filter((v) => v !== itemHolding)[0];
 				const [__, targetItemGridId] = targetItem ? findItem(grids, targetItem.id) : [];
 
+				if (leftShift) {
+					const mouseLocation = UserInputService.GetMouseLocation();
+					clientState.setSplitting([
+						mouseLocation.X,
+						mouseLocation.Y,
+						itemHolding,
+						(success, quantity) => {
+							if (!success) return;
+						},
+					]);
+				}
 				const quantityToHandleWith = leftShift ? math.ceil(itemHolding.quantity / 2) : itemHolding.quantity;
 
 				if (targetItem && targetItemGridId && canMerge(itemHolding, targetItem)) {
