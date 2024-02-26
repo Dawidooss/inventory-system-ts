@@ -13,7 +13,7 @@ export default function useSlider(sliderRef: MutableRefObject<any>, config: Slid
 			slider?.Destroy();
 			setSlider(undefined);
 		};
-	}, []);
+	}, [config]);
 
 	return slider;
 }

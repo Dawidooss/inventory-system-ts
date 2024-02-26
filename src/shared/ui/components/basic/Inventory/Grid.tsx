@@ -91,6 +91,7 @@ export default function Grid(props: Props) {
 			y -= itemHoldingCellOffset[1];
 
 			if (targetItem) {
+				print(targetItem);
 				// merge case
 				if (canMerge(itemHolding, targetItem)) {
 					for (let sX of $range(0, itemConfig.width - 1)) {

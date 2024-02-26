@@ -21,13 +21,14 @@ export default function Inventory() {
 
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemHoldingOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingOffset);
+	const isSplitting = useSelector((state: RootState) => !!state.inventoryProducer.splitting);
 
 	const guiInset = GuiService.GetGuiInset()[0];
 
 	useInventoryInput();
 	useViewport(() => {
 		const conn = camera.GetPropertyChangedSignal("ViewportSize").Connect(() => {
-			clientState.setCellSize(camera.ViewportSize.Y * (50 / 1080));
+			clientState.setCellSize(math.floor(camera.ViewportSize.Y * (50 / 1080)));
 		});
 
 		return () => {

@@ -125,9 +125,6 @@ InventoryEvents.functions.mergeItems.SetCallback((player, req) => {
 	item.quantity -= req.quantity;
 	targetItem.quantity += req.quantity;
 
-	print(item.quantity);
-	print(targetItem.quantity);
-
 	// moved whole item, remove him
 	if (item.quantity <= 0) {
 		grid.items = grid.items.filter((v) => v !== item);

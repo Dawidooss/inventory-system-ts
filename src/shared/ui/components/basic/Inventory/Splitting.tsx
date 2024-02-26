@@ -1,58 +1,69 @@
-import React, { useEffect, useRef } from "@rbxts/react";
+import React, { useEffect, useMemo, useRef } from "@rbxts/react";
 import Text from "../Text";
 import useSlider from "shared/ui/hooks/useSlider";
 import Button from "../Button";
+import { useSelector } from "@rbxts/react-reflex";
+import clientState, { RootState } from "shared/reflex/clientState";
+import getItemConfig from "shared/inventory/getItemConfig";
+import Full from "../Full";
+import { SliderConfig } from "shared/utils/Slider";
 
-type Props = {
-	Position: UDim2;
-	DefaultValue: number;
-	Max: number;
-	Callback: (success: boolean, quantity: number) => void;
-};
+type Props = {};
 
 export default function Splitting(props: Props) {
-	const [x, y];
+	const [x, y, itemSplitting, callback] = useSelector((state: RootState) => state.inventoryProducer.splitting) || [];
+	const isSplitting = !!callback;
+	const itemConfig = itemSplitting && getItemConfig(itemSplitting);
 
 	const sliderRef = useRef();
 	const textboxRef = useRef<TextBox>();
 
-	const slider = useSlider(sliderRef, {
-		SliderData: { Start: 0, End: 10, Increment: props.Max, DefaultValue: props.DefaultValue },
-		MoveInfo: new TweenInfo(0, Enum.EasingStyle.Linear),
-		Axis: "X",
-	});
+	const sliderData: SliderConfig = useMemo(() => {
+		return {
+			SliderData: {
+				Start: 1,
+				End: math.min(itemSplitting?.quantity || 3, itemConfig?.max || 3) - 1,
+				Increment: 1,
+				DefaultValue: math.ceil((itemSplitting?.quantity || 1) / 2),
+			},
+			MoveInfo: new TweenInfo(0, Enum.EasingStyle.Linear),
+			Axis: "X",
+		};
+	}, [itemSplitting, itemConfig]);
+
+	const slider = useSlider(sliderRef, sliderData);
 
 	useEffect(() => {
-		if (!textboxRef.current) return;
 		slider?.Track();
 
 		const conn = slider?.Changed.Connect((newValue) => {
 			textboxRef.current!.Text = `${newValue}`;
 		});
 
-		textboxRef.current.GetPropertyChangedSignal("Text").Connect(() => {
+		textboxRef.current?.GetPropertyChangedSignal("Text").Connect(() => {
 			const newValue = tonumber(textboxRef.current?.Text);
 			if (newValue && newValue !== slider?.GetValue()) {
-				print("newValue", newValue);
 				slider?.OverrideValue(newValue);
 			}
 		});
 
-		textboxRef.current!.FocusLost.Connect(() => {
+		textboxRef.current?.FocusLost.Connect(() => {
 			if (slider?.GetValue()) textboxRef.current!.Text = `${slider?.GetValue()}`;
 		});
+
+		if (textboxRef.current) textboxRef.current.Text = `${slider?.GetValue()}`;
 
 		return () => {
 			conn?.Disconnect();
 		};
 	}, [slider, textboxRef]);
 
-	return (
+	return isSplitting ? (
 		<imagelabel
 			Image={"rbxassetid://14829383074"}
 			BorderSizePixel={0}
 			Size={UDim2.fromScale(1, 0.16)}
-			Position={props.Position}
+			Position={UDim2.fromOffset(x, y)}
 		>
 			<uistroke
 				Color={Color3.fromRGB(186, 138, 18)}
@@ -113,7 +124,10 @@ export default function Splitting(props: Props) {
 				Position={UDim2.fromScale(0.4, 0.7)}
 				Size={UDim2.fromScale(0.25, 0.25)}
 				Bold
-				OnClick={() => props.Callback(false, slider?.GetValue() || 0)}
+				OnClick={() => {
+					clientState.setSplitting();
+					callback && callback(false, slider?.GetValue() || 0);
+				}}
 			/>
 			<Button
 				Text={"PODZIEL"}
@@ -121,8 +135,13 @@ export default function Splitting(props: Props) {
 				Size={UDim2.fromScale(0.25, 0.25)}
 				Color={Color3.fromRGB(81, 144, 59)}
 				Bold
-				OnClick={() => props.Callback(true, slider?.GetValue() || 0)}
+				OnClick={() => {
+					clientState.setSplitting();
+					callback && callback(true, slider?.GetValue() || 0);
+				}}
 			/>
 		</imagelabel>
+	) : (
+		<Full />
 	);
 }

@@ -26,7 +26,7 @@ export interface InventoryProducer {
 const initialState: InventoryProducer = {
 	inventories: {},
 	grids: {},
-	cellSize: camera.ViewportSize.Y * (50 / 1080),
+	cellSize: math.floor(camera.ViewportSize.Y * (50 / 1080)),
 	itemHoldingOffset: [0, 0],
 	itemHoldingCellOffset: [0, 0],
 	itemsHovering: [],
@@ -38,7 +38,7 @@ const inventoryProducer = createProducer(initialState, {
 		cellSize,
 	}),
 
-	setSplitting: (state: InventoryProducer, splitting: InventoryProducer["splitting"]) => ({
+	setSplitting: (state: InventoryProducer, splitting?: InventoryProducer["splitting"]) => ({
 		...state,
 		splitting,
 	}),

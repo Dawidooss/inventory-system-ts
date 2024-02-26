@@ -1,7 +1,7 @@
 import { useKeyPress } from "@rbxts/pretty-react-hooks";
-import { useEffect } from "@rbxts/react";
+import { useCallback, useEffect } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { HttpService, UserInputService } from "@rbxts/services";
+import { GuiService, HttpService, UserInputService } from "@rbxts/services";
 import { InventoryEvents } from "shared/events/inventory";
 import getItemConfig from "shared/inventory/getItemConfig";
 import clientState, { RootState } from "shared/reflex/clientState";
@@ -18,58 +18,108 @@ export default function useInventoryInput() {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemsHovering = useSelector((state: RootState) => state.inventoryProducer.itemsHovering);
 
-	const leftShift = useKeyPress(["LeftControl"]);
+	const leftControl = useKeyPress(["LeftControl"]);
+	const guiInset = GuiService.GetGuiInset()[0];
 
-	const merge = async (item: Item, targetItem: Item, quantity: number) => {
-		const [, itemGridId] = findItem(grids, item.id);
-		const [, targetGridId] = findItem(grids, targetItem.id);
+	const getQuantityToWorkWith = useCallback(
+		(item: Item): [boolean, number] => {
+			print(leftControl);
+			if (!leftControl || item.quantity <= 1) return [true, item.quantity];
+			if (!leftControl || item.quantity === 2) return [true, 1];
 
-		clientState.lockItem(item, true);
-		clientState.lockItem(targetItem, true);
+			let success, quantity;
+			const mouseLocation = UserInputService.GetMouseLocation();
+			clientState.setSplitting([
+				mouseLocation.X - guiInset.X,
+				mouseLocation.Y - guiInset.Y,
+				item,
+				(_success, _quantity) => {
+					success = _success;
+					quantity = _quantity;
+				},
+			]);
+			while (success === undefined) wait();
 
-		InventoryEvents.functions.mergeItems
-			.Call({
-				itemId: item.id,
-				gridId: itemGridId!,
-				targetItemId: targetItem.id,
-				targetGridId: targetGridId!,
-				quantity: quantity,
-			})
-			.After((succ) => {
+			return [success!, quantity!];
+		},
+		[leftControl],
+	);
+
+	const merge = useCallback(
+		async (item: Item, targetItem: Item) => {
+			const [, itemGridId] = findItem(grids, item.id);
+			const [, targetGridId] = findItem(grids, targetItem.id);
+
+			const config = getItemConfig(item);
+
+			clientState.lockItem(item, true);
+			clientState.lockItem(targetItem, true);
+
+			const unlock = () => {
 				clientState.lockItem(item, false);
 				clientState.lockItem(targetItem, false);
-				if (!succ) return;
-				clientState.mergeItems(item, targetItem, quantity);
-			});
-	};
+			};
 
-	const move = async (item: Item, targetGridId: string, x: number, y: number, quantity: number) => {
-		const [_, itemGridId] = findItem(grids, item.id);
-		clientState.lockItem(item, true);
+			let [succ, quantity] = getQuantityToWorkWith(item);
+			if (!succ) return;
 
-		const mockup = { ...item, x, y };
-		mockup.id = HttpService.GenerateGUID(false);
+			quantity = math.clamp(config.max - targetItem.quantity, 0, item.quantity);
 
-		clientState.addItem(targetGridId, mockup);
-		clientState.lockItem(mockup, true);
+			InventoryEvents.functions.mergeItems
+				.Call({
+					itemId: item.id,
+					gridId: itemGridId!,
+					targetItemId: targetItem.id,
+					targetGridId: targetGridId!,
+					quantity: quantity,
+				})
+				.After((succ) => {
+					unlock();
+					if (!succ) return;
+					clientState.mergeItems(item, targetItem, quantity);
+				});
+		},
+		[grids, leftControl],
+	);
 
-		InventoryEvents.functions.moveItem
-			.Call({
-				itemId: item.id,
-				gridId: itemGridId!,
-				targetGridId: targetGridId,
-				x,
-				y,
-				quantity: quantity,
-			})
-			.After((succ, res) => {
+	const move = useCallback(
+		async (item: Item, targetGridId: string, x: number, y: number) => {
+			const [_, itemGridId] = findItem(grids, item.id);
+			clientState.lockItem(item, true);
+
+			const mockup = { ...item, x, y };
+			mockup.id = HttpService.GenerateGUID(false);
+
+			clientState.addItem(targetGridId, mockup);
+			clientState.lockItem(mockup, true);
+
+			const unlock = () => {
 				clientState.removeItem(mockup);
 				clientState.lockItem(item, false);
-				if (!succ) return;
+			};
 
-				clientState.moveItem(item, targetGridId, [x, y], quantity, res.newItemId);
-			});
-	};
+			let [succ, quantity] = getQuantityToWorkWith(item);
+			if (!succ) unlock();
+
+			InventoryEvents.functions.moveItem
+				.Call({
+					itemId: item.id,
+					gridId: itemGridId!,
+					targetGridId: targetGridId,
+					x,
+					y,
+					quantity: quantity,
+				})
+				.After((succ, res) => {
+					clientState.removeItem(mockup);
+					clientState.lockItem(item, false);
+					if (!succ) return;
+
+					clientState.moveItem(item, targetGridId, [x, y], quantity, res.newItemId);
+				});
+		},
+		[grids, leftControl],
+	);
 
 	useEffect(() => {
 		const conn = UserInputService.InputEnded.Connect((input) => {
@@ -86,28 +136,10 @@ export default function useInventoryInput() {
 				const targetItem: Item | undefined = itemsHovering.filter((v) => v !== itemHolding)[0];
 				const [__, targetItemGridId] = targetItem ? findItem(grids, targetItem.id) : [];
 
-				if (leftShift) {
-					const mouseLocation = UserInputService.GetMouseLocation();
-					clientState.setSplitting([
-						mouseLocation.X,
-						mouseLocation.Y,
-						itemHolding,
-						(success, quantity) => {
-							if (!success) return;
-						},
-					]);
-				}
-				const quantityToHandleWith = leftShift ? math.ceil(itemHolding.quantity / 2) : itemHolding.quantity;
-
 				if (targetItem && targetItemGridId && canMerge(itemHolding, targetItem)) {
-					const quantityToMerge = math.clamp(
-						itemHoldingConfig.max - targetItem.quantity,
-						0,
-						quantityToHandleWith,
-					);
-					merge(itemHolding, targetItem, quantityToMerge);
+					merge(itemHolding, targetItem);
 				} else if (itemFits(grids[gridHoveringId], itemHolding, targetCell)) {
-					move(itemHolding, gridHoveringId, targetCell[0], targetCell[1], quantityToHandleWith);
+					move(itemHolding, gridHoveringId, targetCell[0], targetCell[1]);
 				}
 			}
 
@@ -117,5 +149,5 @@ export default function useInventoryInput() {
 		return () => {
 			conn.Disconnect();
 		};
-	}, [cellHovering, gridHoveringId, grids, itemsHovering]);
+	}, [cellHovering, gridHoveringId, grids, itemsHovering, leftControl]);
 }
