@@ -18,7 +18,7 @@ type Props = {
 export default function Item(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
-	const isSplitting = useSelector((state: RootState) => !!state.inventoryProducer.splitting);
+	const isSplitting = useSelector((state: RootState) => !!state.inventoryProducer.splittingData);
 
 	const [transparency, transparencyAPI] = useMotor(0);
 	const imageRef = useRef<ImageButton>();

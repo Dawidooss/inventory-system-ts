@@ -13,6 +13,7 @@ import LoadingCircle from "../../basic/LoadingCircle";
 import Cell from "./Cell";
 import Item from "./Item";
 import Splitting from "./Splitting";
+import getGridConfig from "shared/utils/inventory/getGridConfig";
 
 type Props = {
 	Position: UDim2;
@@ -23,7 +24,7 @@ type Props = {
 type ColorMap = { [key: number]: { [key: number]: Color3 } };
 export default function Grid(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
-	const splitting = useSelector((state: RootState) => !!state.inventoryProducer.splitting);
+	const splittingKeyDown = useSelector((state: RootState) => !!state.inventoryProducer.splittingKeyDown);
 
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
@@ -32,12 +33,14 @@ export default function Grid(props: Props) {
 	const gridHoveringId = useSelector((state: RootState) => state.inventoryProducer.gridHoveringId);
 	let cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
 
+	const gridConfig = props.Data && getGridConfig(props.Data);
+
 	const gridRef = useRef<Frame>();
 	let colorMap: ColorMap = {};
 
 	// update which cell is hovering
 	const updateHoveringCell = () => {
-		if (!props.Data) return;
+		if (!props.Data || !gridConfig) return;
 
 		const grid = gridRef.current;
 		if (!grid) return;
@@ -51,7 +54,7 @@ export default function Grid(props: Props) {
 			let [x, y] = [math.floor(gridRelated.X / cellSize), math.floor(gridRelated.Y / cellSize)];
 
 			// only set cell which is inside grid bounds [0, width-1], [0, height-1]
-			if (x >= 0 && y >= 0 && x < props.Data.width && y < props.Data.height) {
+			if (x >= 0 && y >= 0 && x < gridConfig.width && y < gridConfig.height) {
 				if (!(gridHoveringId === props.Data.id && cellHovering?.[0] === x && cellHovering?.[1] === y)) {
 					clientState.setCellHovering(props.Data.id, [x, y]);
 					cellHovering = [x, y]; // we also have to update state in current render
@@ -67,8 +70,8 @@ export default function Grid(props: Props) {
 	};
 
 	// fill colorMap with data
-	if (props.Data) {
-		for (let x of $range(0, props.Data.width - 1)) {
+	if (props.Data && gridConfig) {
+		for (let x of $range(0, gridConfig.width - 1)) {
 			colorMap[x] = {};
 		}
 
@@ -102,13 +105,13 @@ export default function Grid(props: Props) {
 				}
 			} else {
 				// move case
-				const fits = itemFits(props.Data, itemHolding, [x, y], splitting);
+				const fits = itemFits(props.Data, itemHolding, [x, y], !splittingKeyDown);
 
 				// loop cells and update colors
 				for (let sX of $range(0, itemConfig.width - 1)) {
 					for (let sY of $range(0, itemConfig.height - 1)) {
 						// out of bonds
-						if (x + sX >= props.Data.width || y + sY >= props.Data.height || x + sX < 0 || y + sY < 0)
+						if (x + sX >= gridConfig.width || y + sY >= gridConfig.height || x + sX < 0 || y + sY < 0)
 							continue;
 
 						colorMap[x + sX][y + sY] = fits ? Color3.fromRGB(0, 255, 0) : Color3.fromRGB(255, 0, 0);
@@ -126,9 +129,9 @@ export default function Grid(props: Props) {
 
 	return (
 		<Full>
-			{props.Data ? (
+			{props.Data && gridConfig ? (
 				<frame
-					Size={UDim2.fromOffset(props.Data!.width * cellSize, props.Data!.height * cellSize)}
+					Size={UDim2.fromOffset(gridConfig.width * cellSize, gridConfig.height * cellSize)}
 					AnchorPoint={new Vector2(0.5, 0.5)}
 					Position={props.Position}
 					BackgroundTransparency={1}
@@ -137,9 +140,9 @@ export default function Grid(props: Props) {
 					<Full>
 						<uigridlayout CellSize={new UDim2(0, cellSize, 0, cellSize)} CellPadding={new UDim2()} />
 
-						{table.create(props.Data!.width * props.Data!.height, 0).map((v, i) => {
-							const y = math.floor(i / props.Data!.width);
-							const x = i - y * props.Data!.width;
+						{table.create(gridConfig.width * gridConfig.height, 0).map((v, i) => {
+							const y = math.floor(i / gridConfig.width);
+							const x = i - y * gridConfig.width;
 
 							return <Cell key={v} Color={colorMap[x] && colorMap[x][y]} />;
 						})}

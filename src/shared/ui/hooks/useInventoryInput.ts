@@ -17,8 +17,13 @@ export default function useInventoryInput() {
 	const cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemsHovering = useSelector((state: RootState) => state.inventoryProducer.itemsHovering);
+	let splittingKeyDown = useSelector((state: RootState) => state.inventoryProducer.splittingKeyDown);
 
-	const splitting = useKeyPress(["LeftControl"]);
+	if (useKeyPress(["LeftControl"]) !== splittingKeyDown) {
+		clientState.setSplittingKeyDown(!splittingKeyDown);
+		splittingKeyDown = !splittingKeyDown;
+	}
+
 	const guiInset = GuiService.GetGuiInset()[0];
 
 	const showInventoryKeyPressed = useKeyPress(["E"]);
@@ -29,12 +34,12 @@ export default function useInventoryInput() {
 
 	const getQuantityToWorkWith = useCallback(
 		(item: Item): [boolean, number] => {
-			if (!splitting || item.quantity <= 1) return [true, item.quantity];
-			if (!splitting || item.quantity === 2) return [true, 1];
+			if (!splittingKeyDown || item.quantity <= 1) return [true, item.quantity];
+			if (!splittingKeyDown || item.quantity === 2) return [true, 1];
 
 			let success, quantity;
 			const mouseLocation = UserInputService.GetMouseLocation();
-			clientState.setSplitting([
+			clientState.setSplittingData([
 				mouseLocation.X - guiInset.X,
 				mouseLocation.Y - guiInset.Y,
 				item,
@@ -47,7 +52,7 @@ export default function useInventoryInput() {
 
 			return [success!, quantity!];
 		},
-		[splitting],
+		[splittingKeyDown],
 	);
 
 	const merge = useCallback(
@@ -66,7 +71,10 @@ export default function useInventoryInput() {
 			};
 
 			let [succ, quantity] = getQuantityToWorkWith(item);
-			if (!succ) return;
+			if (!succ) {
+				unlock();
+				return;
+			}
 
 			quantity = math.clamp(config.max - targetItem.quantity, 0, item.quantity);
 
@@ -84,7 +92,7 @@ export default function useInventoryInput() {
 					clientState.mergeItems(item, targetItem, quantity);
 				});
 		},
-		[grids, splitting],
+		[grids, splittingKeyDown],
 	);
 
 	const move = useCallback(
@@ -104,7 +112,10 @@ export default function useInventoryInput() {
 			};
 
 			let [succ, quantity] = getQuantityToWorkWith(item);
-			if (!succ) unlock();
+			if (!succ) {
+				unlock();
+				return;
+			}
 
 			InventoryEvents.functions.moveItem
 				.Call({
@@ -123,7 +134,7 @@ export default function useInventoryInput() {
 					clientState.moveItem(item, targetGridId, [x, y], quantity, res.newItemId);
 				});
 		},
-		[grids, splitting],
+		[grids, splittingKeyDown],
 	);
 
 	useEffect(() => {
@@ -143,7 +154,7 @@ export default function useInventoryInput() {
 
 				if (targetItem && targetItemGridId && canMerge(itemHolding, targetItem)) {
 					merge(itemHolding, targetItem);
-				} else if (itemFits(grids[gridHoveringId], itemHolding, targetCell, splitting)) {
+				} else if (itemFits(grids[gridHoveringId], itemHolding, targetCell, !splittingKeyDown)) {
 					move(itemHolding, gridHoveringId, targetCell[0], targetCell[1]);
 				}
 			}
@@ -154,5 +165,5 @@ export default function useInventoryInput() {
 		return () => {
 			conn.Disconnect();
 		};
-	}, [cellHovering, gridHoveringId, grids, itemsHovering, splitting]);
+	}, [cellHovering, gridHoveringId, grids, itemsHovering, splittingKeyDown]);
 }
