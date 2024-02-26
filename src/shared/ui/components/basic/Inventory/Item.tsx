@@ -1,12 +1,12 @@
 import { Instant, Linear, toBinding, useMotor, useMouse } from "@rbxts/pretty-react-hooks";
 import React, { Binding, useEffect, useRef } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
+import { GuiService } from "@rbxts/services";
+import getItemConfig from "shared/inventory/getItemConfig";
 import clientState, { RootState } from "shared/reflex/clientState";
 import { Item } from "shared/reflex/inventoryProducer";
-import getItemConfig from "shared/inventory/getItemConfig";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import Text from "../Text";
-import { GuiService } from "@rbxts/services";
 
 type Props = {
 	Data: Item;

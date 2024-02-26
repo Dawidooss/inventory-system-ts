@@ -1,17 +1,17 @@
+import { useMouse } from "@rbxts/pretty-react-hooks";
 import React, { useRef } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
 import { GuiService, UserInputService } from "@rbxts/services";
+import getItemConfig from "shared/inventory/getItemConfig";
 import clientState, { RootState } from "shared/reflex/clientState";
 import { Grid } from "shared/reflex/inventoryProducer";
-import Full from "../Full";
-import Item from "./Item";
-import Cell from "./Cell";
-import getItemConfig from "shared/inventory/getItemConfig";
-import { useMouse } from "@rbxts/pretty-react-hooks";
-import itemFits from "shared/utils/inventory/itemFits";
-import LoadingCircle from "../LoadingCircle";
-import isPointInRect from "shared/utils/inventory/isPointInRect";
 import canMerge from "shared/utils/inventory/canMerge";
+import isPointInRect from "shared/utils/inventory/isPointInRect";
+import itemFits from "shared/utils/inventory/itemFits";
+import Full from "../Full";
+import LoadingCircle from "../LoadingCircle";
+import Cell from "./Cell";
+import Item from "./Item";
 
 type Props = {
 	Position: UDim2;
@@ -71,7 +71,7 @@ export default function Grid(props: Props) {
 		}
 
 		// loop through items and add them to colorMap as occupied
-		for (let [id, item] of pairs(props.Data.items)) {
+		for (let [, item] of pairs(props.Data.items)) {
 			const itemConfig = getItemConfig(item);
 			for (let sX of $range(0, itemConfig.width - 1)) {
 				for (let sY of $range(0, itemConfig.height - 1)) {
@@ -90,21 +90,17 @@ export default function Grid(props: Props) {
 			x -= itemHoldingCellOffset[0];
 			y -= itemHoldingCellOffset[1];
 
-			// merge case
-			let merged = false;
 			if (targetItem) {
+				// merge case
 				if (canMerge(itemHolding, targetItem)) {
 					for (let sX of $range(0, itemConfig.width - 1)) {
 						for (let sY of $range(0, itemConfig.height - 1)) {
 							colorMap[targetItem.x + sX][targetItem.y + sY] = Color3.fromRGB(0, 255, 0); //prettier-ignore
-							merged = true;
 						}
 					}
 				}
-			}
-
-			// move case
-			if (!merged) {
+			} else {
+				// move case
 				const fits = itemFits(props.Data, itemHolding, [x, y]);
 
 				// loop cells and update colors

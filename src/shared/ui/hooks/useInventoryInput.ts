@@ -1,3 +1,4 @@
+import { useKeyPress } from "@rbxts/pretty-react-hooks";
 import { useEffect } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
 import { HttpService, UserInputService } from "@rbxts/services";
@@ -17,78 +18,89 @@ export default function useInventoryInput() {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemsHovering = useSelector((state: RootState) => state.inventoryProducer.itemsHovering);
 
+	const leftShift = useKeyPress(["LeftControl"]);
+
+	const merge = (item: Item, targetItem: Item, quantity: number) => {
+		const [, itemGridId] = findItem(grids, item.id);
+		const [, targetGridId] = findItem(grids, targetItem.id);
+
+		clientState.lockItem(item, true);
+		clientState.lockItem(targetItem, true);
+
+		InventoryEvents.functions.mergeItems
+			.Call({
+				itemId: item.id,
+				gridId: itemGridId!,
+				targetItemId: targetItem.id,
+				targetGridId: targetGridId!,
+				quantity: quantity,
+			})
+			.After((succ) => {
+				clientState.lockItem(item, false);
+				clientState.lockItem(targetItem, false);
+				if (!succ) return;
+				clientState.mergeItems(item, targetItem, quantity);
+			});
+	};
+
+	const move = (item: Item, targetGridId: string, x: number, y: number, quantity: number) => {
+		const [_, itemGridId] = findItem(grids, item.id);
+		clientState.lockItem(item, true);
+
+		const mockup = { ...item, x, y };
+		mockup.id = HttpService.GenerateGUID(false);
+
+		clientState.addItem(targetGridId, mockup);
+		clientState.lockItem(mockup, true);
+
+		InventoryEvents.functions.moveItem
+			.Call({
+				itemId: item.id,
+				gridId: itemGridId!,
+				targetGridId: targetGridId,
+				x,
+				y,
+				quantity: quantity,
+			})
+			.After((succ, res) => {
+				clientState.removeItem(mockup);
+				clientState.lockItem(item, false);
+				if (!succ) return;
+
+				clientState.moveItem(item, targetGridId, [x, y], quantity, res.newItemId);
+			});
+	};
+
 	useEffect(() => {
 		const conn = UserInputService.InputEnded.Connect((input) => {
-			if (input.UserInputType === Enum.UserInputType.MouseButton1) {
-				if (cellHovering && gridHoveringId && itemHolding) {
-					const targetCell: [number, number] = [
-						cellHovering[0] - itemHoldingCellOffset[0],
-						cellHovering[1] - itemHoldingCellOffset[1],
-					];
-					const itemConfig = getItemConfig(itemHolding);
-					const [_, itemHoldingGridId] = findItem(grids, itemHolding.id);
+			if (input.UserInputType !== Enum.UserInputType.MouseButton1) return;
 
-					const targetItem: Item | undefined = itemsHovering.filter((v) => v !== itemHolding)[0];
-					const [__, targetItemGridId] = targetItem ? findItem(grids, targetItem.id) : [];
+			if (cellHovering && gridHoveringId && itemHolding) {
+				const itemHoldingConfig = getItemConfig(itemHolding);
 
-					if (targetItem && targetItemGridId) {
-						// merge
-						if (canMerge(itemHolding, targetItem)) {
-							const oldItemHoldingQuantity = itemHolding.quantity;
-							const oldTargetItemQuantity = targetItem.quantity;
+				const targetCell: [number, number] = [
+					cellHovering[0] - itemHoldingCellOffset[0],
+					cellHovering[1] - itemHoldingCellOffset[1],
+				];
 
-							clientState.mergeItems(itemHolding, targetItem);
-							clientState.lockItem(itemHolding, true);
-							clientState.lockItem(targetItem, true);
+				const targetItem: Item | undefined = itemsHovering.filter((v) => v !== itemHolding)[0];
+				const [__, targetItemGridId] = targetItem ? findItem(grids, targetItem.id) : [];
 
-							InventoryEvents.functions.mergeItems
-								.Call({
-									itemId: itemHolding.id,
-									gridId: itemHoldingGridId!,
-									targetItemId: targetItem.id,
-									targetGridId: targetItemGridId,
-								})
-								.After((succ) => {
-									clientState.lockItem(itemHolding, false);
-									clientState.lockItem(targetItem, false);
-									if (!succ) {
-										clientState.setItemQuantity(itemHolding, oldItemHoldingQuantity);
-										clientState.setItemQuantity(targetItem, oldTargetItemQuantity);
-									}
-								});
-						}
-					} else if (itemFits(grids[gridHoveringId], itemHolding, targetCell)) {
-						// move
-						const [lastX, lastY] = [itemHolding.x, itemHolding.y];
-						clientState.moveItem(itemHolding, gridHoveringId, targetCell);
-						clientState.lockItem(itemHolding, true);
+				const quantityToHandleWith = leftShift ? math.ceil(itemHolding.quantity / 2) : itemHolding.quantity;
 
-						const mockup = { ...itemHolding, x: lastX, y: lastY };
-						mockup.id = HttpService.GenerateGUID(false);
-
-						clientState.addItem(gridHoveringId, mockup);
-						clientState.lockItem(mockup, true);
-
-						InventoryEvents.functions.moveItem
-							.Call({
-								itemId: itemHolding.id,
-								gridId: itemHoldingGridId!,
-								targetGridId: gridHoveringId,
-								x: targetCell[0],
-								y: targetCell[1],
-							})
-							.After((succ, res) => {
-								clientState.removeItem(mockup);
-								clientState.lockItem(itemHolding, false);
-								if (!succ) {
-									clientState.moveItem(itemHolding, itemHoldingGridId!, [lastX, lastY]);
-								}
-							});
-					}
+				if (targetItem && targetItemGridId && canMerge(itemHolding, targetItem)) {
+					const quantityToMerge = math.clamp(
+						itemHoldingConfig.max - targetItem.quantity,
+						0,
+						quantityToHandleWith,
+					);
+					merge(itemHolding, targetItem, quantityToMerge);
+				} else if (itemFits(grids[gridHoveringId], itemHolding, targetCell)) {
+					move(itemHolding, gridHoveringId, targetCell[0], targetCell[1], quantityToHandleWith);
 				}
-
-				clientState.holdItem();
 			}
+
+			clientState.holdItem();
 		});
 
 		return () => {

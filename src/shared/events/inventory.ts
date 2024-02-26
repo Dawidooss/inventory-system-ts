@@ -33,31 +33,39 @@ export namespace InventoryEvents {
 			targetGridId: string;
 			x: number;
 			y: number;
+			quantity: number;
 		}>([
 			["itemId", Sedes.ToString()],
 			["gridId", Sedes.ToString()],
 			["targetGridId", Sedes.ToString()],
 			["x", Sedes.ToUnsigned(8)],
 			["y", Sedes.ToUnsigned(8)],
+			["quantity", Sedes.ToUnsigned(64)],
 		]),
+
+		moveItemOut: new Sedes.Serializer<{
+			newItemId: string;
+		}>([["newItemId", Sedes.ToString()]]),
 
 		mergeItemsIn: new Sedes.Serializer<{
 			itemId: string;
 			gridId: string;
 			targetItemId: string;
 			targetGridId: string;
+			quantity: number;
 		}>([
 			["itemId", Sedes.ToString()],
 			["gridId", Sedes.ToString()],
 			["targetItemId", Sedes.ToString()],
 			["targetGridId", Sedes.ToString()],
+			["quantity", Sedes.ToUnsigned(64)],
 		]),
 	};
 	export const events = {};
 
 	export const functions = {
 		fetchInventory: Red.Function("fetchGrid", serializers.fetchInventoryIn, serializers.fetchInventoryOut),
-		moveItem: Red.Function("moveItem", serializers.moveItemIn, Sedes.NoSerializer),
+		moveItem: Red.Function("moveItem", serializers.moveItemIn, serializers.moveItemOut),
 		mergeItems: Red.Function("mergeItems", serializers.mergeItemsIn, Sedes.NoSerializer),
 	};
 }

@@ -9,7 +9,7 @@ const camera = Workspace.CurrentCamera!;
 
 export interface InventoryProducer {
 	cellSize: number;
-	splitting: boolean;
+	splitting?: [number, number, (success: boolean, quantity: number) => void];
 
 	inventories: { [id: string]: InventoryMap };
 	grids: { [id: string]: Grid };
@@ -24,7 +24,6 @@ export interface InventoryProducer {
 }
 
 const initialState: InventoryProducer = {
-	splitting: false,
 	inventories: {},
 	grids: {},
 	cellSize: camera.ViewportSize.Y * (50 / 1080),
@@ -104,25 +103,42 @@ const inventoryProducer = createProducer(initialState, {
 		return { ...state, grids: { ...state.grids } };
 	},
 
-	moveItem: (state: InventoryProducer, item: Item, targetGridId: string, targetPosition: [number, number]) => {
+	moveItem: (
+		state: InventoryProducer,
+		item: Item,
+		targetGridId: string,
+		targetPosition: [number, number],
+		quantity?: number,
+		newItemId?: string,
+	) => {
 		const [_, gridId] = findItem(state.grids, item.id);
 
 		if (gridId && state.grids[gridId]) {
-			state.grids[gridId].items = state.grids[gridId].items.filter((v) => v !== item);
-			item.x = targetPosition[0];
-			item.y = targetPosition[1];
-			state.grids[targetGridId].items.push(item);
+			if (quantity && newItemId && quantity > 0 && quantity < item.quantity) {
+				item.quantity -= quantity;
+				state.grids[targetGridId].items.push({
+					...item,
+					x: targetPosition[0],
+					y: targetPosition[1],
+					id: newItemId,
+					quantity: quantity,
+				});
+			} else {
+				state.grids[gridId].items = state.grids[gridId].items.filter((v) => v !== item);
+				item.x = targetPosition[0];
+				item.y = targetPosition[1];
+				state.grids[targetGridId].items.push(item);
+			}
 		}
 
 		return { ...state, grids: { ...state.grids } };
 	},
 
-	mergeItems: (state: InventoryProducer, item: Item, targetItem: Item) => {
+	mergeItems: (state: InventoryProducer, item: Item, targetItem: Item, quantityToMerge: number) => {
 		const config = getItemConfig(item);
-		const toMove = math.clamp(config.max - targetItem.quantity, 0, item.quantity);
 
-		item.quantity -= toMove;
-		targetItem.quantity += toMove;
+		item.quantity -= quantityToMerge;
+		targetItem.quantity += quantityToMerge;
 
 		// moved whole item, remove him
 		if (item.quantity <= 0) {
