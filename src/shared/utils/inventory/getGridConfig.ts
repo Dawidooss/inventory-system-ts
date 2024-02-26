@@ -1,9 +1,9 @@
-import gridConfigs from "shared/data/gridConfigs";
+import gridConfigs, { GridTypes } from "shared/data/gridConfigs";
 import { Grid } from "shared/reflex/inventoryProducer";
 
-export default function getGridConfig(gridId: Grid | string) {
-	if (typeOf(gridId) === "string") {
-		return gridConfigs[gridId as string];
+export default function getGridConfig(gridId: Grid | GridTypes) {
+	if (typeIs(gridId, "string")) {
+		return gridConfigs[gridId as GridTypes];
 	} else {
 		return gridConfigs[(gridId as Grid).type];
 	}

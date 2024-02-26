@@ -1,6 +1,6 @@
 import { createProducer } from "@rbxts/reflex";
 import { Workspace } from "@rbxts/services";
-import { GridConfig } from "shared/data/gridConfigs";
+import { GridConfig, GridTypes } from "shared/data/gridConfigs";
 import getItemConfig from "shared/inventory/getItemConfig";
 import { findItem } from "shared/utils/inventory/findItem";
 
@@ -9,7 +9,8 @@ const camera = Workspace.CurrentCamera!;
 export interface InventoryProducer {
 	visible: boolean;
 	cellSize: number;
-	splitting?: [number, number, Item, (success: boolean, quantity: number) => void];
+	splittingKeyDown: boolean;
+	splittingData?: [number, number, Item, (success: boolean, quantity: number) => void];
 
 	inventories: { [id: string]: InventoryMap };
 	grids: { [id: string]: Grid };
@@ -25,6 +26,7 @@ export interface InventoryProducer {
 
 const initialState: InventoryProducer = {
 	visible: true,
+	splittingKeyDown: false,
 	inventories: {},
 	grids: {},
 	cellSize: math.floor(camera.ViewportSize.Y * (50 / 1080)),
@@ -44,9 +46,14 @@ const inventoryProducer = createProducer(initialState, {
 		visible,
 	}),
 
-	setSplitting: (state: InventoryProducer, splitting?: InventoryProducer["splitting"]) => ({
+	setSplittingData: (state: InventoryProducer, splittingData?: InventoryProducer["splittingData"]) => ({
 		...state,
-		splitting,
+		splittingData,
+	}),
+
+	setSplittingKeyDown: (state: InventoryProducer, splittingKeyDown: InventoryProducer["splittingKeyDown"]) => ({
+		...state,
+		splittingKeyDown,
 	}),
 
 	setCellHovering: (
@@ -179,7 +186,7 @@ export type Item = {
 
 export type Grid = {
 	id: string;
-	type: keyof ;
+	type: GridTypes;
 	items: Item[];
 };
 

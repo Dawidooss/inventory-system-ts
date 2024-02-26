@@ -17,8 +17,7 @@ Players.PlayerAdded.Connect((player) => {
 
 	grids[backpackId] = {
 		id: backpackId,
-		width: 15,
-		height: 6,
+		type: "backpack",
 		items: [
 			{
 				id: HttpService.GenerateGUID(false),
@@ -41,8 +40,7 @@ Players.PlayerAdded.Connect((player) => {
 
 	grids[testId] = {
 		id: testId,
-		width: 6,
-		height: 6,
+		type: "test",
 		items: [],
 	};
 
@@ -76,7 +74,7 @@ InventoryEvents.functions.moveItem.SetCallback((player, req) => {
 	);
 
 	const splitting = req.quantity !== item.quantity;
-	const fits = itemFits(targetGrid, item, [req.x, req.y], splitting);
+	const fits = itemFits(targetGrid, item, [req.x, req.y], !splitting);
 	check(fits, `item doesn't fit in desired position`);
 
 	let newItemId = "";

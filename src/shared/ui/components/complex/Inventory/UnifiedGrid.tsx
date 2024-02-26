@@ -22,7 +22,7 @@ type Props = {
 };
 
 type ColorMap = { [key: number]: { [key: number]: Color3 } };
-export default function Grid(props: Props) {
+export default function UnifiedGrid(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const splittingKeyDown = useSelector((state: RootState) => !!state.inventoryProducer.splittingKeyDown);
 
