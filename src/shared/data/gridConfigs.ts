@@ -5,12 +5,24 @@ const gridConfigs = createGridConfig({
 	backpack: {
 		width: 15,
 		height: 6,
-		unified: false,
 	},
-	test: {
-		width: 6,
-		height: 6,
-		unified: false,
+	primary: {
+		width: 5,
+		height: 2,
+		unified: true,
+		text: "Primary",
+	},
+	secondary: {
+		width: 3,
+		height: 2,
+		unified: true,
+		text: "Secondary",
+	},
+	melee: {
+		width: 1,
+		height: 1,
+		unified: true,
+		text: "Melee",
 	},
 });
 
@@ -21,7 +33,8 @@ export type GridTypes = Extract<(typeof gridConfigsTypes)[number], string>;
 export type GridConfig = {
 	width: number;
 	height: number;
-	unified: boolean;
+	unified?: boolean;
+	text?: string;
 };
 
 export default gridConfigs;

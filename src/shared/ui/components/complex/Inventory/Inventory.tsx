@@ -26,7 +26,16 @@ export default function Inventory(props: Props) {
 				AspectType={Enum.AspectType.ScaleWithParentSize}
 			/>
 			<Text Text={"EKWIPUNEK"} Position={UDim2.fromScale(0.07, 0.05)} Size={UDim2.fromScale(0.534, 0.06)} />
-			<Grid Position={UDim2.fromScale(0.5, 0.8)} Data={grids[inventory?.backpack]} />
+			{grids[inventory?.backpack] && (
+				<Grid Position={UDim2.fromScale(0.5, 0.8)} Data={grids[inventory!.backpack]} />
+			)}
+			{grids[inventory?.primary] && (
+				<Grid Position={UDim2.fromScale(0.3, 0.5)} Data={grids[inventory!.primary]} />
+			)}
+			{grids[inventory?.secondary] && (
+				<Grid Position={UDim2.fromScale(0.6, 0.5)} Data={grids[inventory!.secondary]} />
+			)}
+			{grids[inventory?.melee] && <Grid Position={UDim2.fromScale(0.8, 0.5)} Data={grids[inventory!.melee]} />}
 		</imagelabel>
 	);
 }

@@ -9,6 +9,9 @@ export = (target: Frame): (() => void) => {
 	root.render(Router());
 
 	const backpackId = HttpService.GenerateGUID(false);
+	const primaryId = HttpService.GenerateGUID(false);
+	const secondaryId = HttpService.GenerateGUID(false);
+	const meleeId = HttpService.GenerateGUID(false);
 
 	clientState.setGrid(backpackId, {
 		id: backpackId,
@@ -22,7 +25,6 @@ export = (target: Frame): (() => void) => {
 				y: 1,
 				locked: false,
 			},
-
 			{
 				id: HttpService.GenerateGUID(false),
 				name: "Patyk",
@@ -34,8 +36,27 @@ export = (target: Frame): (() => void) => {
 		],
 	});
 
+	clientState.setGrid(primaryId, {
+		id: primaryId,
+		type: "primary",
+		items: [],
+	});
+	clientState.setGrid(secondaryId, {
+		id: secondaryId,
+		type: "secondary",
+		items: [],
+	});
+	clientState.setGrid(meleeId, {
+		id: meleeId,
+		type: "melee",
+		items: [],
+	});
+
 	clientState.setInventory(tostring(Players.LocalPlayer.UserId), {
 		backpack: backpackId,
+		primary: primaryId,
+		secondary: secondaryId,
+		melee: meleeId,
 	});
 
 	return () => {

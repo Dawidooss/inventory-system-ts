@@ -13,7 +13,9 @@ const inventories: {
 
 Players.PlayerAdded.Connect((player) => {
 	const backpackId = HttpService.GenerateGUID(false);
-	const testId = HttpService.GenerateGUID(false);
+	const primaryId = HttpService.GenerateGUID(false);
+	const secondaryId = HttpService.GenerateGUID(false);
+	const meleeId = HttpService.GenerateGUID(false);
 
 	grids[backpackId] = {
 		id: backpackId,
@@ -22,31 +24,43 @@ Players.PlayerAdded.Connect((player) => {
 			{
 				id: HttpService.GenerateGUID(false),
 				name: "Patyk",
-				quantity: 2,
-				x: 0,
-				y: 0,
+				quantity: 3,
+				x: 1,
+				y: 1,
 				locked: false,
 			},
 			{
 				id: HttpService.GenerateGUID(false),
 				name: "Patyk",
 				quantity: 4,
-				x: 5,
-				y: 2,
+				x: 3,
+				y: 1,
 				locked: false,
 			},
 		],
 	};
 
-	grids[testId] = {
-		id: testId,
-		type: "test",
+	grids[primaryId] = {
+		id: primaryId,
+		type: "primary",
+		items: [],
+	};
+	grids[secondaryId] = {
+		id: secondaryId,
+		type: "secondary",
+		items: [],
+	};
+	grids[meleeId] = {
+		id: meleeId,
+		type: "melee",
 		items: [],
 	};
 
 	inventories[tostring(player.UserId)] = {
 		backpack: grids[backpackId],
-		test: grids[testId],
+		primary: grids[primaryId],
+		secondary: grids[secondaryId],
+		melee: grids[meleeId],
 	};
 });
 

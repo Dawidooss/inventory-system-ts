@@ -170,7 +170,6 @@ const inventoryProducer = createProducer(initialState, {
 
 	setItemQuantity: (state: InventoryProducer, item: Item, quantity: number) => {
 		item.quantity = quantity;
-
 		return { ...state, grids: { ...state.grids } };
 	},
 });

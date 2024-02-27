@@ -1,8 +1,9 @@
 import BitBuffer from "@rbxts/bitbuffer";
+import { Object } from "../Object";
 
 export namespace Sedes {
 	export class Serializer<T extends { [key: string]: any }> implements Method<T> {
-		private methods: [keyof T, Method<any>][];
+		private methods: { [key in keyof T]: Method<T[key]> }; // mappedObject
 
 		constructor(methods: Serializer<T>["methods"]) {
 			this.methods = methods;
@@ -10,51 +11,37 @@ export namespace Sedes {
 
 		public Des = (buffer: BitBuffer): T => {
 			let data: { [k: string]: any } = {};
-			for (const [key, method] of this.methods) {
-				data[key as string] = method.Des(buffer);
+			for (const key of Object.keys(this.methods)) {
+				// Manual type assertion (caution: weakens type safety)
+				data[key as string] = this.methods[key].Des(buffer);
 			}
-			return data as T;
+			return data as T; // Caution: manual type assertion weakens type safety
 		};
 
 		public Ser = (data: T, buffer?: BitBuffer): BitBuffer => {
 			buffer ||= BitBuffer();
 
-			for (const [key, method] of this.methods) {
-				method.Ser(data[key], buffer);
+			for (const key of Object.keys(this.methods)) {
+				// Manual type assertion (caution: weakens type safety)
+				this.methods[key].Ser(data[key], buffer);
 			}
 
 			return buffer;
 		};
 
 		public ToSelected<R extends { [key: string]: any }>(keys: (keyof T)[]): Serializer<R> {
-			let methods: [keyof R, Sedes.Method<any>][] = [];
+			let selectedMethods: { [key: string]: Method<any> } = {}; // mappedObject
 			for (const key of keys) {
-				const method = this.methods.find((v) => {
-					return v[0] === key;
-				});
-				if (method) {
-					methods.push(method as [keyof R, Sedes.Method<any>]);
-				}
+				selectedMethods[key as string] = this.methods[key]; // Assuming key exists in methods
 			}
 
-			return new Serializer<R>(methods);
+			return new Serializer<R>(selectedMethods as { [key in keyof R]: Method<any> });
 		}
 
-		// public Except<R extends { [key: string]: any }>(keys: (keyof T)[]): Serializer<R> {
-		// 	let methods: [keyof R, Sedes.Method<any>][] = [];
-		// 	for (const [key, method] of this.methods) {
-		// 		if (keys.find((v) => v === key)) {
-		// 			continue;
-		// 		}
-
-		// 		methods.set(key as keyof R, method);
-		// 	}
-
-		// 	return new Serializer<R>(methods);
-		// }
+		// ... rest of the code (unchanged)
 	}
 
-	export const NoSerializer = new Serializer<{}>([]);
+	export const NoSerializer = new Serializer<{}>({});
 
 	export type Method<T> = {
 		Des: (buffer: BitBuffer) => T;
@@ -166,22 +153,22 @@ export namespace Sedes {
 		};
 	};
 
-	export const ToDict = <K, V>(keyMethod: Method<K>, valueMethod: Method<V>): Method<Map<K, V>> => {
+	export const ToDict = <T>(method: Method<T>): Method<{ [key: string]: T }> => {
 		return {
 			Des: (buffer) => {
-				const dict = new Map<K, V>();
+				const dict: { [key: string]: T } = {};
 				while (buffer.readBits(1)[0] === 1) {
-					const key = keyMethod.Des(buffer);
-					const value = valueMethod.Des(buffer);
-					dict.set(key, value);
+					const key = Sedes.ToString().Des(buffer);
+					const value = method.Des(buffer);
+					dict[key] = value;
 				}
 				return dict;
 			},
 			Ser: (data, buffer) => {
-				for (const [key, value] of data) {
+				for (const [key, value] of pairs(data)) {
 					buffer.writeBits(1);
-					keyMethod.Ser(key, buffer);
-					valueMethod.Ser(value, buffer);
+					Sedes.ToString().Ser(key as string, buffer);
+					method.Ser(value, buffer);
 				}
 				buffer.writeBits(0);
 				return buffer;

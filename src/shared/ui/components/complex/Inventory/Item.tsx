@@ -13,6 +13,7 @@ type Props = {
 	Holding?: boolean;
 	Offset?: [number, number];
 	Locked?: boolean;
+	CenterOnGrid?: boolean;
 };
 
 export default function Item(props: Props) {
@@ -49,8 +50,12 @@ export default function Item(props: Props) {
 	}, [cellHovering]);
 
 	let position: Binding<UDim2>;
+	let anchorPoint: Vector2 | undefined;
 	if (props.Holding) {
 		position = mouse.map((p) => UDim2.fromOffset(p.X + (props.Offset?.[0] || 0), p.Y + (props.Offset?.[1] || 0)));
+	} else if (props.CenterOnGrid) {
+		position = toBinding(UDim2.fromScale(0.5, 0.5));
+		anchorPoint = new Vector2(0.5, 0.5);
 	} else {
 		position = toBinding(UDim2.fromOffset(cellSize * props.Data.x, cellSize * props.Data.y));
 	}
@@ -62,6 +67,7 @@ export default function Item(props: Props) {
 			BackgroundTransparency={1}
 			ScaleType={Enum.ScaleType.Fit}
 			Position={position}
+			AnchorPoint={anchorPoint}
 			ImageTransparency={transparency.map((v) => {
 				if (props.Locked) {
 					if (v === 0) {
