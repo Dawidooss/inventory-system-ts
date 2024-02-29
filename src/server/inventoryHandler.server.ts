@@ -1,6 +1,5 @@
 import { HttpService, Players } from "@rbxts/services";
 import { InventoryEvents } from "shared/events/inventory";
-import getItemConfig from "shared/inventory/getItemConfig";
 import { Grid } from "shared/reflex/inventoryProducer";
 import check from "shared/utils/check";
 import canMerge from "shared/utils/inventory/canMerge";

@@ -31,7 +31,7 @@ export default function InventoryRouter() {
 
 	return visible ? (
 		<Full>
-			<Inventory inventoryId={`${Players.LocalPlayer.UserId}`} />
+			<Inventory inventoryId={`${Players.LocalPlayer.UserId}`} Position={UDim2.fromScale(0.02, 0.02)} />
 			{itemHolding ? (
 				<Item
 					Data={itemHolding}

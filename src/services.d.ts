@@ -5,6 +5,7 @@ type ItemConfig = {
 	width: number;
 	height: number;
 	max: number;
+	type?: string;
 };
 
 interface ReplicatedFirst extends Instance {

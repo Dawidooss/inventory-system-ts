@@ -1,12 +1,12 @@
 import React from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { Players, Workspace } from "@rbxts/services";
 import { RootState } from "shared/reflex/clientState";
 import Text from "../../basic/Text";
 import Grid from "./Grid";
 
 type Props = {
 	inventoryId: string;
+	Position: UDim2;
 };
 
 export default function Inventory(props: Props) {
@@ -16,7 +16,7 @@ export default function Inventory(props: Props) {
 	return (
 		<imagelabel
 			Image={"http://www.roblox.com/asset/?id=14590790831"}
-			Position={UDim2.fromScale(0.016, 0.037)}
+			Position={props.Position}
 			Size={UDim2.fromScale(0.45, 0.941)}
 			BackgroundTransparency={1}
 		>

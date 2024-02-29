@@ -20,7 +20,7 @@ export = (target: Frame): (() => void) => {
 		items: [
 			{
 				id: HttpService.GenerateGUID(false),
-				name: "Patyk",
+				name: "Szabla",
 				quantity: 3,
 				x: 1,
 				y: 1,

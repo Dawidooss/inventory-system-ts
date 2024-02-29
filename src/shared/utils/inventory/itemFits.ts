@@ -13,6 +13,8 @@ export default function itemFits(grid: Grid, item: Item, position: [number, numb
 	if (position[0] < 0 || position[0] > gridConfig.width - itemConfig.width) return false;
 	if (position[1] < 0 || position[1] > gridConfig.height - itemConfig.height) return false;
 
+	if (gridConfig.itemTypes && !gridConfig.itemTypes.find((v) => v === itemConfig.type)) return;
+
 	for (let otherItem of grid.items) {
 		if (ignoreItem && otherItem === item) {
 			if (otherItem.x === position[0] && otherItem.y === position[1]) return false;

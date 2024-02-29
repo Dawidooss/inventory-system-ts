@@ -25,7 +25,7 @@ export interface InventoryProducer {
 
 	itemsEquipped: {
 		[inventoryId: string]: {
-			[gridName: string]: Item;
+			[gridName: string]: Item | undefined;
 		};
 	};
 }
@@ -110,6 +110,12 @@ const inventoryProducer = createProducer(initialState, {
 			delete state.itemsEquipped[inventoryId];
 		}
 		return { ...state, inventories: { ...state.inventories }, itemsEquipped: { ...state.itemsEquipped } };
+	},
+
+	setItemEquipped: (state: InventoryProducer, inventoryId: string, gridName: string, item?: Item) => {
+		state.itemsEquipped[inventoryId][gridName] = item;
+
+		return { ...state, itemsEquipped: { ...state.itemsEquipped } };
 	},
 
 	holdItem: (

@@ -12,6 +12,7 @@ const gridConfigs = createGridConfig({
 		unified: true,
 		text: "Primary",
 		equippable: true,
+		itemTypes: ["tool"],
 	},
 	secondary: {
 		width: 3,
@@ -39,6 +40,7 @@ export type GridConfig = {
 	unified?: boolean;
 	text?: string;
 	equippable?: boolean;
+	itemTypes?: string[];
 };
 
 export default gridConfigs;

@@ -11,6 +11,7 @@ const itemSerializer = new Sedes.Serializer<Item>({
 	y: Sedes.ToUnsigned(8),
 	locked: Sedes.ToBool(),
 });
+
 const gridSerializer = new Sedes.Serializer<Grid>({
 	id: Sedes.ToString(),
 	name: Sedes.ToString(),
