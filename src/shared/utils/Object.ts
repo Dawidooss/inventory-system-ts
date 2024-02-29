@@ -16,4 +16,14 @@ export namespace Object {
 		}
 		return keys;
 	}
+
+	export function values<V extends defined>(dict: { [key: string]: V }) {
+		const array: V[] = [];
+
+		for (let [k, v] of pairs(dict)) {
+			array.push(v);
+		}
+
+		return array;
+	}
 }

@@ -34,6 +34,7 @@
 		"@rbxts/ripple": "^0.8.1",
 		"@rbxts/services": "^1.5.1",
 		"@rbxts/signal": "^1.1.1",
+		"roblox-ts": "^2.3.0-dev-3a713b2",
 		"ts-transformer-keys": "^0.4.4"
 	}
 }

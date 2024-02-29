@@ -88,6 +88,7 @@ export default function useInventoryInput() {
 
 		const mockup = { ...item, x, y };
 		mockup.id = HttpService.GenerateGUID(false);
+		mockup.mockup = true;
 
 		clientState.addItem(targetGridId, mockup);
 		clientState.lockItem(mockup, true);

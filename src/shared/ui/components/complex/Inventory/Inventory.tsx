@@ -1,17 +1,17 @@
 import React from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { Workspace } from "@rbxts/services";
+import { Players, Workspace } from "@rbxts/services";
 import { RootState } from "shared/reflex/clientState";
 import Text from "../../basic/Text";
 import Grid from "./Grid";
 
 type Props = {
-	inventoryName: string;
+	inventoryId: string;
 };
 
 export default function Inventory(props: Props) {
 	const grids = useSelector((state: RootState) => state.inventoryProducer.grids);
-	const inventory = useSelector((state: RootState) => state.inventoryProducer.inventories[props.inventoryName]);
+	const inventory = useSelector((state: RootState) => state.inventoryProducer.inventories[props.inventoryId]);
 
 	return (
 		<imagelabel

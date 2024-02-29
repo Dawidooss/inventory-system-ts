@@ -5,6 +5,7 @@ import clientState from "shared/reflex/clientState";
 import { InventoryMap } from "shared/reflex/inventoryProducer";
 import Router from "shared/ui/components/complex/Router";
 import { Object } from "shared/utils/Object";
+import Tools from "./Tools";
 
 const playerGui = Players.LocalPlayer.WaitForChild("PlayerGui") as PlayerGui;
 
@@ -31,3 +32,5 @@ InventoryEvents.functions.fetchInventory
 			clientState.setInventory(tostring(player.UserId), inventoryMap);
 		}
 	});
+
+new Tools();

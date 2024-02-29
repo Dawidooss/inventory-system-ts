@@ -31,7 +31,7 @@ export default function InventoryRouter() {
 
 	return visible ? (
 		<Full>
-			<Inventory inventoryName={`${Players.LocalPlayer.UserId}`} />
+			<Inventory inventoryId={`${Players.LocalPlayer.UserId}`} />
 			{itemHolding ? (
 				<Item
 					Data={itemHolding}

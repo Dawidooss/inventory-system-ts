@@ -1,8 +1,10 @@
 import { createProducer } from "@rbxts/reflex";
-import { Workspace } from "@rbxts/services";
+import { Players, Workspace } from "@rbxts/services";
 import { GridConfig, GridTypes } from "shared/data/gridConfigs";
 import getItemConfig from "shared/inventory/getItemConfig";
+import { Object } from "shared/utils/Object";
 import { findItem } from "shared/utils/inventory/findItem";
+import getGridConfig from "shared/utils/inventory/getGridConfig";
 
 const camera = Workspace.CurrentCamera!;
 
@@ -22,6 +24,12 @@ export interface InventoryProducer {
 	gridHoveringId?: string;
 	cellHovering?: [number, number];
 	itemsHovering: Item[];
+
+	itemsEquipped: {
+		[inventoryId: string]: {
+			[gridName: string]: Item;
+		};
+	};
 }
 
 const initialState: InventoryProducer = {
@@ -33,6 +41,7 @@ const initialState: InventoryProducer = {
 	itemHoldingOffset: [0, 0],
 	itemHoldingCellOffset: [0, 0],
 	itemsHovering: [],
+	itemsEquipped: {},
 };
 
 const inventoryProducer = createProducer(initialState, {
@@ -94,9 +103,15 @@ const inventoryProducer = createProducer(initialState, {
 		return { ...state, grids: { ...state.grids } };
 	},
 
-	setInventory: (state: InventoryProducer, inventoryId: string, inventoryMap: InventoryMap) => {
-		state.inventories[inventoryId] = inventoryMap;
-		return { ...state, inventories: { ...state.inventories } };
+	setInventory: (state: InventoryProducer, inventoryId: string, inventoryMap?: InventoryMap) => {
+		if (inventoryMap) {
+			state.inventories[inventoryId] = inventoryMap;
+			state.itemsEquipped[inventoryId] = {};
+		} else {
+			delete state.inventories[inventoryId];
+			delete state.itemsEquipped[inventoryId];
+		}
+		return { ...state, inventories: { ...state.inventories }, itemsEquipped: { ...state.itemsEquipped } };
 	},
 
 	holdItem: (
@@ -124,24 +139,28 @@ const inventoryProducer = createProducer(initialState, {
 		quantity?: number,
 		newItemId?: string,
 	) => {
-		const [_, gridId] = findItem(state.grids, item.id);
+		const [_, gridId] = findItem(state.grids, item.id) as [Item, string];
 
-		if (gridId && state.grids[gridId]) {
-			if (quantity && newItemId && quantity > 0 && quantity < item.quantity) {
-				item.quantity -= quantity;
-				state.grids[targetGridId].items.push({
-					...item,
-					x: targetPosition[0],
-					y: targetPosition[1],
-					id: newItemId,
-					quantity: quantity,
-				});
-			} else {
-				state.grids[gridId].items = state.grids[gridId].items.filter((v) => v !== item);
-				item.x = targetPosition[0];
-				item.y = targetPosition[1];
-				state.grids[targetGridId].items.push(item);
-			}
+		const grid = state.grids[gridId];
+		const targetGrid = state.grids[targetGridId];
+
+		const gridConfig = getGridConfig(grid);
+		const targetGridConfig = getGridConfig(targetGrid);
+
+		if (quantity && newItemId && quantity > 0 && quantity < item.quantity) {
+			item.quantity -= quantity;
+			state.grids[targetGridId].items.push({
+				...item,
+				x: targetPosition[0],
+				y: targetPosition[1],
+				id: newItemId,
+				quantity: quantity,
+			});
+		} else {
+			state.grids[gridId].items = state.grids[gridId].items.filter((v) => v !== item);
+			item.x = targetPosition[0];
+			item.y = targetPosition[1];
+			state.grids[targetGridId].items.push(item);
 		}
 
 		return { ...state, grids: { ...state.grids } };
@@ -181,7 +200,10 @@ export type Item = {
 	x: number;
 	y: number;
 	locked: boolean;
+	mockup?: boolean;
 };
+
+export type Tool = Item & {};
 
 export type Grid = {
 	id: string;
