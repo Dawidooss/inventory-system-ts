@@ -10,6 +10,7 @@ import canMerge from "shared/utils/inventory/canMerge";
 import { findItem } from "shared/utils/inventory/findItem";
 import itemFits from "shared/utils/inventory/itemFits";
 import useKeyOncePressed from "./useKeyOncePressed";
+import getGridConfig from "shared/utils/inventory/getGridConfig";
 
 export default function useInventoryInput() {
 	const splittingKeyDown = useSelector((state: RootState) => state.inventoryProducer.splittingKeyDown);
@@ -128,13 +129,17 @@ export default function useInventoryInput() {
 			if (input.UserInputType !== Enum.UserInputType.MouseButton1) return;
 
 			if (state.cellHovering && state.gridHoveringId && state.itemHolding) {
-				const targetCell: [number, number] = [
-					state.cellHovering[0] - state.itemHoldingCellOffset[0],
-					state.cellHovering[1] - state.itemHoldingCellOffset[1],
-				];
-
 				const targetItem: Item | undefined = state.itemsHovering.filter((v) => v !== state.itemHolding)[0];
 				const [, targetItemGridId] = targetItem ? findItem(state.grids, targetItem.id) : [];
+				const gridHoveringConfig = state.gridHoveringId && getGridConfig(state.grids[state.gridHoveringId]);
+
+				let targetCell = state.cellHovering;
+				if (gridHoveringConfig && !gridHoveringConfig.unified) {
+					targetCell = [
+						targetCell[0] - state.itemHoldingCellOffset[0],
+						targetCell[1] - state.itemHoldingCellOffset[1],
+					];
+				}
 
 				if (targetItem && targetItemGridId && canMerge(state.itemHolding, targetItem)) {
 					merge(state.itemHolding, targetItem);

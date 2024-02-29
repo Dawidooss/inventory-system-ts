@@ -15,6 +15,7 @@ export = (target: Frame): (() => void) => {
 
 	clientState.setGrid(backpackId, {
 		id: backpackId,
+		name: "backpack",
 		type: "backpack",
 		items: [
 			{
@@ -38,16 +39,19 @@ export = (target: Frame): (() => void) => {
 
 	clientState.setGrid(primaryId, {
 		id: primaryId,
+		name: "primary",
 		type: "primary",
 		items: [],
 	});
 	clientState.setGrid(secondaryId, {
 		id: secondaryId,
+		name: "secondary",
 		type: "secondary",
 		items: [],
 	});
 	clientState.setGrid(meleeId, {
 		id: meleeId,
+		name: "melee",
 		type: "melee",
 		items: [],
 	});

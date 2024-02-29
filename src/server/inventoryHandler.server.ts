@@ -19,6 +19,7 @@ Players.PlayerAdded.Connect((player) => {
 
 	grids[backpackId] = {
 		id: backpackId,
+		name: "backpack",
 		type: "backpack",
 		items: [
 			{
@@ -42,16 +43,19 @@ Players.PlayerAdded.Connect((player) => {
 
 	grids[primaryId] = {
 		id: primaryId,
+		name: "primary",
 		type: "primary",
 		items: [],
 	};
 	grids[secondaryId] = {
 		id: secondaryId,
+		name: "secondary",
 		type: "secondary",
 		items: [],
 	};
 	grids[meleeId] = {
 		id: meleeId,
+		name: "melee",
 		type: "melee",
 		items: [],
 	};

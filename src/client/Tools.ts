@@ -1,44 +1,47 @@
 import Maid, { Destroyable } from "@rbxts/maid";
 import { Players } from "@rbxts/services";
 import Signal from "@rbxts/signal";
-import clientState, { RootState } from "shared/reflex/clientState";
-import { InventoryMap, Tool } from "shared/reflex/inventoryProducer";
+import clientState from "shared/reflex/clientState";
+import { Grid, InventoryMap, Tool } from "shared/reflex/inventoryProducer";
+import { Object } from "shared/utils/Object";
 
 export default class Tools implements Destroyable {
 	public tools: { [gridName: string]: Tool } = {};
-	public toolChanged = new Signal<(tool: Tool, gridName: string, gridId: string) => void>();
+	public toolChanged = new Signal<(tool: Tool, grid: Grid) => void>();
 
 	private maid = new Maid();
 
 	constructor() {
 		clientState
-			.wait((state: RootState) => state.inventoryProducer.inventories[tostring(Players.LocalPlayer.UserId)])
+			.wait((state) => state.inventoryProducer.inventories[tostring(Players.LocalPlayer.UserId)])
 			.then((inventoryMap) => {
 				this.onInventory(inventoryMap);
 			});
 	}
 
 	private onInventory(inventoryMap: InventoryMap) {
-		const onEquippableGrid = (gridName: string, gridId: string) => {
-			this.maid.GiveTask(
-				clientState.subscribe(
-					(state: RootState) => state.inventoryProducer.grids[gridId],
-					(grid) => {
-						if (!grid) return;
-						print(grid.items[0]);
-						if (this.tools[gridId] === grid.items[0]) return;
+		const onEquippableGridChange = (grid: Grid) => {
+			if (!grid) return;
+			if (grid.items[0] && grid.items[0].mockup) return;
+			if (this.tools[grid.name] === grid.items[0]) return;
 
-						this.tools[gridId] = grid.items[0];
-						this.toolChanged.Fire(grid.items[0], gridName, gridId);
-						print("toolChanged", grid.items[0], gridName, gridId);
-					},
-				),
-			);
+			this.tools[grid.name] = grid.items[0];
+			this.toolChanged.Fire(grid.items[0], grid);
+			print("toolChanged", grid.items[0], grid);
 		};
 
-		onEquippableGrid("primary", inventoryMap.primary);
-		onEquippableGrid("secondary", inventoryMap.secondary);
-		onEquippableGrid("melee", inventoryMap.melee);
+		this.maid.GiveTask(
+			clientState.subscribe(
+				(state) => state.inventoryProducer.grids,
+				(grids) => {
+					for (let grid of Object.values(grids)) {
+						if (inventoryMap[grid.name]) {
+							onEquippableGridChange(grid);
+						}
+					}
+				},
+			),
+		);
 	}
 
 	public Destroy(): void {

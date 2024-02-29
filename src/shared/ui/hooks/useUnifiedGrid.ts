@@ -11,7 +11,6 @@ import { ColorMap } from "./useGrid";
 
 export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | undefined>, grid: Grid) {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
-	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
 
 	const itemsHovering = useSelector((state: RootState) => state.inventoryProducer.itemsHovering);
 	const gridHoveringId = useSelector((state: RootState) => state.inventoryProducer.gridHoveringId);
@@ -68,9 +67,7 @@ export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | u
 	}
 
 	useMouse(() => {
-		if (itemHoldingCellOffset) {
-			updateHoveringCell();
-		}
+		if (itemHolding) updateHoveringCell();
 	});
 
 	return colorMap;

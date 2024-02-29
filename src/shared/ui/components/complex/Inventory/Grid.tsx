@@ -2,15 +2,13 @@ import React, { useRef } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
 import { RootState } from "shared/reflex/clientState";
 import { Grid } from "shared/reflex/inventoryProducer";
-import useGrid, { ColorMap } from "shared/ui/hooks/useGrid";
+import useGrid from "shared/ui/hooks/useGrid";
+import useUnifiedGrid from "shared/ui/hooks/useUnifiedGrid";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
 import Full from "../../basic/Full";
-import LoadingCircle from "../../basic/LoadingCircle";
+import Text from "../../basic/Text";
 import Cell from "./Cell";
 import Item from "./Item";
-import useUnifiedGrid from "shared/ui/hooks/useUnifiedGrid";
-import { config } from "@rbxts/ripple";
-import Text from "../../basic/Text";
 
 type Props = {
 	Position: UDim2;

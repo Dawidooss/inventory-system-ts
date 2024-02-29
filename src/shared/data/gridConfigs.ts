@@ -11,18 +11,21 @@ const gridConfigs = createGridConfig({
 		height: 2,
 		unified: true,
 		text: "Primary",
+		equippable: true,
 	},
 	secondary: {
 		width: 3,
 		height: 2,
 		unified: true,
 		text: "Secondary",
+		equippable: true,
 	},
 	melee: {
 		width: 1,
-		height: 1,
+		height: 2,
 		unified: true,
 		text: "Melee",
+		equippable: true,
 	},
 });
 
@@ -35,6 +38,7 @@ export type GridConfig = {
 	height: number;
 	unified?: boolean;
 	text?: string;
+	equippable?: boolean;
 };
 
 export default gridConfigs;

@@ -1,10 +1,8 @@
 import { createProducer } from "@rbxts/reflex";
-import { Players, Workspace } from "@rbxts/services";
-import { GridConfig, GridTypes } from "shared/data/gridConfigs";
+import { Workspace } from "@rbxts/services";
+import { GridTypes } from "shared/data/gridConfigs";
 import getItemConfig from "shared/inventory/getItemConfig";
-import { Object } from "shared/utils/Object";
 import { findItem } from "shared/utils/inventory/findItem";
-import getGridConfig from "shared/utils/inventory/getGridConfig";
 
 const camera = Workspace.CurrentCamera!;
 
@@ -144,12 +142,9 @@ const inventoryProducer = createProducer(initialState, {
 		const grid = state.grids[gridId];
 		const targetGrid = state.grids[targetGridId];
 
-		const gridConfig = getGridConfig(grid);
-		const targetGridConfig = getGridConfig(targetGrid);
-
 		if (quantity && newItemId && quantity > 0 && quantity < item.quantity) {
 			item.quantity -= quantity;
-			state.grids[targetGridId].items.push({
+			targetGrid.items.push({
 				...item,
 				x: targetPosition[0],
 				y: targetPosition[1],
@@ -157,10 +152,10 @@ const inventoryProducer = createProducer(initialState, {
 				quantity: quantity,
 			});
 		} else {
-			state.grids[gridId].items = state.grids[gridId].items.filter((v) => v !== item);
+			grid.items = grid.items.filter((v) => v !== item);
 			item.x = targetPosition[0];
 			item.y = targetPosition[1];
-			state.grids[targetGridId].items.push(item);
+			targetGrid.items.push(item);
 		}
 
 		return { ...state, grids: { ...state.grids } };
@@ -207,6 +202,7 @@ export type Tool = Item & {};
 
 export type Grid = {
 	id: string;
+	name: string;
 	type: GridTypes;
 	items: Item[];
 };
