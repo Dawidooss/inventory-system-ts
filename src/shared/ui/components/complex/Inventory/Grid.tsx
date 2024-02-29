@@ -58,6 +58,7 @@ export default function Grid(props: Props) {
 				{props.Data!.items.map((v) => (
 					<Item
 						key={v.id}
+						GridId={props.Data.id}
 						Data={v}
 						Locked={v.id === itemHolding?.id || v.locked}
 						CenterOnGrid={gridConfig?.unified}

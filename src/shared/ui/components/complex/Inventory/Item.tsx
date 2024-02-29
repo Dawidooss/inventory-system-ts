@@ -10,6 +10,7 @@ import Text from "../../basic/Text";
 
 type Props = {
 	Data: Item;
+	GridId?: string;
 	Holding?: boolean;
 	Offset?: [number, number];
 	Locked?: boolean;
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export default function Item(props: Props) {
+	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
 	const isSplitting = useSelector((state: RootState) => !!state.inventoryProducer.splittingData);
@@ -29,25 +31,24 @@ export default function Item(props: Props) {
 
 	// detect if is hovering and update itemsHovering state
 	useEffect(() => {
-		if (
-			!(props.Locked || clientState.getState().inventoryProducer.itemHolding?.id === props.Data.id) &&
-			cellHovering
-		) {
+		const state = clientState.getState().inventoryProducer;
+		if (!(props.Locked || state.itemHolding?.id === props.Data.id) && cellHovering) {
 			if (
 				isPointInRect(
 					new Vector2(cellHovering[0], cellHovering[1]),
 					new Vector2(props.Data.x, props.Data.y),
 					new Vector2(config.width - 1, config.height - 1),
-				)
+				) &&
+				props.GridId === state.gridHoveringId
 			) {
-				if (!clientState.getState().inventoryProducer.itemsHovering.find((v) => v === props.Data))
-					clientState.setItemHovering(props.Data, true);
+				if (!state.itemsHovering.find((v) => v === props.Data)) clientState.setItemHovering(props.Data, true);
 				return;
 			}
 		}
-		if (clientState.getState().inventoryProducer.itemsHovering.find((v) => v === props.Data))
+		if (state.itemsHovering.find((v) => v === props.Data)) {
 			clientState.setItemHovering(props.Data, false);
-	}, [cellHovering]);
+		}
+	}, [cellHovering, itemHolding]);
 
 	let position: Binding<UDim2>;
 	let anchorPoint: Vector2 | undefined;

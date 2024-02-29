@@ -83,11 +83,11 @@ export default function useInventoryInput() {
 			});
 	}, []);
 
-	const move = useCallback(async (item: Item, targetGridId: string, x: number, y: number) => {
+	const move = useCallback(async (item: Item, targetGridId: string, targetCell: [number, number]) => {
 		const [_, itemGridId] = findItem(clientState.getState().inventoryProducer.grids, item.id);
 		clientState.lockItem(item, true);
 
-		const mockup = { ...item, x, y };
+		const mockup = { ...item, x: targetCell[0], y: targetCell[1] };
 		mockup.id = HttpService.GenerateGUID(false);
 		mockup.mockup = true;
 
@@ -110,8 +110,8 @@ export default function useInventoryInput() {
 				itemId: item.id,
 				gridId: itemGridId!,
 				targetGridId: targetGridId,
-				x,
-				y,
+				x: targetCell[0],
+				y: targetCell[1],
 				quantity: quantity,
 			})
 			.After((succ, res) => {
@@ -119,7 +119,7 @@ export default function useInventoryInput() {
 				clientState.lockItem(item, false);
 				if (!succ) return;
 
-				clientState.moveItem(item, targetGridId, [x, y], quantity, res.newItemId);
+				clientState.moveItem(item, targetGridId, targetCell, quantity, res.newItemId);
 			});
 	}, []);
 
@@ -146,7 +146,7 @@ export default function useInventoryInput() {
 				} else if (
 					itemFits(state.grids[state.gridHoveringId], state.itemHolding, targetCell, !state.splittingKeyDown)
 				) {
-					move(state.itemHolding, state.gridHoveringId, targetCell[0], targetCell[1]);
+					move(state.itemHolding, state.gridHoveringId, targetCell);
 				}
 			}
 
