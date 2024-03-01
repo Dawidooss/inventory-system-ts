@@ -90,12 +90,12 @@ InventoryEvents.functions.moveItem.SetCallback((player, req) => {
 		`quantity to move is bigger than item quantity ${req.quantity} > ${item.quantity}`,
 	);
 
-	const splitting = req.quantity !== item.quantity;
-	const fits = itemFits(targetGrid, item, [req.x, req.y], !splitting);
+	const split = req.quantity !== item.quantity;
+	const fits = itemFits(targetGrid, item, [req.x, req.y], !split);
 	check(fits, `item doesn't fit in desired position`);
 
 	let newItemId = "";
-	if (splitting) {
+	if (split) {
 		// split
 		item.quantity -= req.quantity;
 		newItemId = HttpService.GenerateGUID(false);

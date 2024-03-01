@@ -1,12 +1,15 @@
 import React from "@rbxts/react";
-import Router from "../components/complex/Router";
 import { createRoot } from "@rbxts/react-roblox";
 import clientState from "shared/reflex/clientState";
 import { HttpService, Players } from "@rbxts/services";
+import ToolsHandler from "client/Tools";
+import Router from "shared/ui/components/complex/Router";
 
 export = (target: Frame): (() => void) => {
 	const root = createRoot(target);
 	root.render(Router());
+
+	new ToolsHandler();
 
 	const backpackId = HttpService.GenerateGUID(false);
 	const primaryId = HttpService.GenerateGUID(false);

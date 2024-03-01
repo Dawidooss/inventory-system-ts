@@ -1,9 +1,9 @@
 import React from "@rbxts/react";
 
 type Props = {
-	Text: string;
-	Position: UDim2;
-	Size: UDim2;
+	Text?: string;
+	Position?: UDim2;
+	Size?: UDim2;
 	Color?: Color3;
 	TextXAlignment?: Enum.TextXAlignment;
 	Transparency?: number;

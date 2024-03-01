@@ -9,8 +9,9 @@ const camera = Workspace.CurrentCamera!;
 export interface InventoryProducer {
 	visible: boolean;
 	cellSize: number;
-	splittingKeyDown: boolean;
-	splittingData?: [number, number, Item, (success: boolean, quantity: number) => void];
+	splitKeyDown: boolean;
+	splitData?: [number, number, Item, (success: boolean, quantity: number) => void];
+	contextData?: [x: number, y: number, item: Item, options: ContextMenuOptions];
 
 	inventories: { [id: string]: InventoryMap };
 	grids: { [id: string]: Grid };
@@ -32,7 +33,7 @@ export interface InventoryProducer {
 
 const initialState: InventoryProducer = {
 	visible: true,
-	splittingKeyDown: false,
+	splitKeyDown: false,
 	inventories: {},
 	grids: {},
 	cellSize: math.floor(camera.ViewportSize.Y * (50 / 1080)),
@@ -53,14 +54,19 @@ const inventoryProducer = createProducer(initialState, {
 		visible,
 	}),
 
-	setSplittingData: (state: InventoryProducer, splittingData?: InventoryProducer["splittingData"]) => ({
+	setContextData: (state: InventoryProducer, contextData?: InventoryProducer["contextData"]) => ({
 		...state,
-		splittingData,
+		contextData,
 	}),
 
-	setSplittingKeyDown: (state: InventoryProducer, splittingKeyDown: InventoryProducer["splittingKeyDown"]) => ({
+	setSplitData: (state: InventoryProducer, splitData?: InventoryProducer["splitData"]) => ({
 		...state,
-		splittingKeyDown,
+		splitData,
+	}),
+
+	setSplitKeyDown: (state: InventoryProducer, splitKeyDown: InventoryProducer["splitKeyDown"]) => ({
+		...state,
+		splitKeyDown,
 	}),
 
 	setCellHovering: (
@@ -193,6 +199,13 @@ const inventoryProducer = createProducer(initialState, {
 		return { ...state, grids: { ...state.grids } };
 	},
 });
+
+export type ContextMenuOptions = {
+	[key: string]: {
+		color: Color3;
+		callback: (item: Item) => void;
+	};
+};
 
 export type Item = {
 	id: string;

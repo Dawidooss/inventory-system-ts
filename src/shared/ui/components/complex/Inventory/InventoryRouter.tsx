@@ -7,7 +7,8 @@ import useInventoryInput from "shared/ui/hooks/useInventoryInput";
 import Full from "../../basic/Full";
 import Inventory from "./Inventory";
 import Item from "./Item";
-import Splitting from "./Splitting";
+import SplitMenu from "./SplitMenu";
+import ContextMenu from "./ContextMenu";
 
 const camera = Workspace.CurrentCamera!;
 
@@ -41,7 +42,8 @@ export default function InventoryRouter() {
 			) : (
 				<Full />
 			)}
-			<Splitting />
+			<SplitMenu />
+			<ContextMenu />
 		</Full>
 	) : (
 		<></>

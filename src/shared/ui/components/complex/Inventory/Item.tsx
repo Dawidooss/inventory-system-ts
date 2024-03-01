@@ -1,7 +1,7 @@
 import { Instant, Linear, toBinding, useMotor, useMouse } from "@rbxts/pretty-react-hooks";
 import React, { Binding, useEffect, useRef } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { GuiService } from "@rbxts/services";
+import { GuiService, UserInputService } from "@rbxts/services";
 import getItemConfig from "shared/inventory/getItemConfig";
 import clientState, { RootState } from "shared/reflex/clientState";
 import { Item } from "shared/reflex/inventoryProducer";
@@ -21,7 +21,7 @@ export default function Item(props: Props) {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
-	const isSplitting = useSelector((state: RootState) => !!state.inventoryProducer.splittingData);
+	const splitVisible = useSelector((state: RootState) => !!state.inventoryProducer.splitData);
 
 	const [transparency, transparencyAPI] = useMotor(0);
 	const imageRef = useRef<ImageButton>();
@@ -84,12 +84,31 @@ export default function Item(props: Props) {
 			Event={{
 				MouseButton1Down: (rbx) => {
 					if (props.Locked) return;
-					if (isSplitting) return;
-
+					if (splitVisible) return;
+					clientState.setContextData();
 					const offset = rbx.AbsolutePosition.sub(mouse.getValue()).add(GuiService.GetGuiInset()[0]);
 
 					clientState.holdItem(props.Data, [offset.X, offset.Y]);
 					clientState.setItemHovering(props.Data, false);
+				},
+				MouseButton2Click: (rbx) => {
+					if (props.Locked) return;
+					if (splitVisible) return;
+
+					const mouseLocation = mouse.getValue().sub(GuiService.GetGuiInset()[0]);
+					clientState.setContextData([
+						mouseLocation.X,
+						mouseLocation.Y,
+						props.Data,
+						{
+							drop: {
+								color: Color3.fromRGB(255, 0, 0),
+								callback: (item) => {
+									clientState.removeItem(props.Data);
+								},
+							},
+						},
+					]);
 				},
 			}}
 			ref={imageRef}

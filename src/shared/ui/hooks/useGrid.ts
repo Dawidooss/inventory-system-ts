@@ -14,7 +14,7 @@ export type ColorMap = { [key: number]: { [key: number]: Color3 | undefined } };
 
 export default function useGrid(gridRef: React.MutableRefObject<Frame | undefined>, grid: Grid) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
-	const splittingKeyDown = useSelector((state: RootState) => !!state.inventoryProducer.splittingKeyDown);
+	const splitKeyDown = useSelector((state: RootState) => !!state.inventoryProducer.splitKeyDown);
 
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 	const itemHoldingCellOffset = useSelector((state: RootState) => state.inventoryProducer.itemHoldingCellOffset);
@@ -91,7 +91,7 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 				}
 			} else {
 				// move case
-				const fits = itemFits(grid, itemHolding, [x, y], !splittingKeyDown);
+				const fits = itemFits(grid, itemHolding, [x, y], !splitKeyDown);
 
 				// loop cells and update colors
 				for (let sX of $range(0, itemConfig.width - 1)) {

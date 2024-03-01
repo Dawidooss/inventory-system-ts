@@ -10,11 +10,10 @@ import { SliderConfig } from "shared/utils/Slider";
 
 type Props = {};
 
-export default function Splitting(props: Props) {
-	const [x, y, itemSplitting, callback] =
-		useSelector((state: RootState) => state.inventoryProducer.splittingData) || [];
-	const isSplitting = !!callback;
-	const itemConfig = itemSplitting && getItemConfig(itemSplitting);
+export default function SplitMenu(props: Props) {
+	const [x, y, item, callback] = useSelector((state: RootState) => state.inventoryProducer.splitData) || [];
+	const visible = !!callback;
+	const itemConfig = item && getItemConfig(item);
 
 	const sliderRef = useRef();
 	const textboxRef = useRef<TextBox>();
@@ -23,14 +22,14 @@ export default function Splitting(props: Props) {
 		return {
 			SliderData: {
 				Start: 1,
-				End: math.min(itemSplitting?.quantity || 3, itemConfig?.max || 3) - 1,
+				End: math.min(item?.quantity || 3, itemConfig?.max || 3) - 1,
 				Increment: 1,
-				DefaultValue: math.ceil((itemSplitting?.quantity || 1) / 2),
+				DefaultValue: math.ceil((item?.quantity || 1) / 2),
 			},
 			MoveInfo: new TweenInfo(0, Enum.EasingStyle.Linear),
 			Axis: "X",
 		};
-	}, [itemSplitting, itemConfig]);
+	}, [item, itemConfig]);
 
 	const slider = useSlider(sliderRef, sliderData);
 
@@ -59,7 +58,7 @@ export default function Splitting(props: Props) {
 		};
 	}, [slider, textboxRef]);
 
-	return isSplitting ? (
+	return visible ? (
 		<imagelabel
 			Image={"rbxassetid://14829383074"}
 			BorderSizePixel={0}
@@ -126,7 +125,7 @@ export default function Splitting(props: Props) {
 				Size={UDim2.fromScale(0.25, 0.25)}
 				Bold
 				OnClick={() => {
-					clientState.setSplittingData();
+					clientState.setSplitData();
 					callback && callback(false, slider?.GetValue() || 0);
 				}}
 			/>
@@ -137,7 +136,7 @@ export default function Splitting(props: Props) {
 				Color={Color3.fromRGB(81, 144, 59)}
 				Bold
 				OnClick={() => {
-					clientState.setSplittingData();
+					clientState.setSplitData();
 					callback && callback(true, slider?.GetValue() || 0);
 				}}
 			/>

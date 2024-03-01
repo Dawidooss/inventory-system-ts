@@ -1,7 +1,7 @@
 import { useKeyPress } from "@rbxts/pretty-react-hooks";
 import { useCallback, useEffect, useState } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { GuiService, HttpService, UserInputService } from "@rbxts/services";
+import { GuiService, HttpService, RunService, UserInputService } from "@rbxts/services";
 import { InventoryEvents } from "shared/events/inventory";
 import getItemConfig from "shared/inventory/getItemConfig";
 import clientState, { RootState } from "shared/reflex/clientState";
@@ -13,9 +13,9 @@ import useKeyOncePressed from "./useKeyOncePressed";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
 
 export default function useInventoryInput() {
-	const splittingKeyDown = useSelector((state: RootState) => state.inventoryProducer.splittingKeyDown);
-	if (useKeyPress(["LeftControl"]) !== splittingKeyDown) {
-		clientState.setSplittingKeyDown(!splittingKeyDown);
+	const splitKeyDown = useSelector((state: RootState) => state.inventoryProducer.splitKeyDown);
+	if (useKeyPress(["LeftControl"]) !== splitKeyDown) {
+		clientState.setSplitKeyDown(!splitKeyDown);
 	}
 
 	const guiInset = GuiService.GetGuiInset()[0];
@@ -26,12 +26,12 @@ export default function useInventoryInput() {
 
 	const getQuantityToWorkWith = useCallback((item: Item): [boolean, number] => {
 		const state = clientState.getState().inventoryProducer;
-		if (!state.splittingKeyDown || item.quantity <= 1) return [true, item.quantity];
-		if (!state.splittingKeyDown || item.quantity === 2) return [true, 1];
+		if (!state.splitKeyDown || item.quantity <= 1) return [true, item.quantity];
+		if (!state.splitKeyDown || item.quantity === 2) return [true, 1];
 
 		let success, quantity;
 		const mouseLocation = UserInputService.GetMouseLocation();
-		clientState.setSplittingData([
+		clientState.setSplitData([
 			mouseLocation.X - guiInset.X,
 			mouseLocation.Y - guiInset.Y,
 			item,
@@ -68,19 +68,28 @@ export default function useInventoryInput() {
 
 		quantity = math.clamp(config.max - targetItem.quantity, 0, item.quantity);
 
-		InventoryEvents.functions.mergeItems
-			.Call({
-				itemId: item.id,
-				gridId: itemGridId!,
-				targetItemId: targetItem.id,
-				targetGridId: targetGridId!,
-				quantity: quantity,
-			})
-			.After((succ) => {
-				unlock();
-				if (!succ) return;
-				clientState.mergeItems(item, targetItem, quantity);
-			});
+		const success = () => {
+			clientState.mergeItems(item, targetItem, quantity);
+		};
+
+		if (RunService.IsRunning()) {
+			InventoryEvents.functions.mergeItems
+				.Call({
+					itemId: item.id,
+					gridId: itemGridId!,
+					targetItemId: targetItem.id,
+					targetGridId: targetGridId!,
+					quantity: quantity,
+				})
+				.After((succ) => {
+					unlock();
+					if (!succ) return;
+					success();
+				});
+		} else {
+			unlock();
+			success();
+		}
 	}, []);
 
 	const move = useCallback(async (item: Item, targetGridId: string, targetCell: [number, number]) => {
@@ -105,22 +114,31 @@ export default function useInventoryInput() {
 			return;
 		}
 
-		InventoryEvents.functions.moveItem
-			.Call({
-				itemId: item.id,
-				gridId: itemGridId!,
-				targetGridId: targetGridId,
-				x: targetCell[0],
-				y: targetCell[1],
-				quantity: quantity,
-			})
-			.After((succ, res) => {
-				clientState.removeItem(mockup);
-				clientState.lockItem(item, false);
-				if (!succ) return;
+		const success = (newItemId: string) => {
+			clientState.moveItem(item, targetGridId, targetCell, quantity, newItemId);
+		};
 
-				clientState.moveItem(item, targetGridId, targetCell, quantity, res.newItemId);
-			});
+		if (RunService.IsRunning()) {
+			InventoryEvents.functions.moveItem
+				.Call({
+					itemId: item.id,
+					gridId: itemGridId!,
+					targetGridId: targetGridId,
+					x: targetCell[0],
+					y: targetCell[1],
+					quantity: quantity,
+				})
+				.After((succ, res) => {
+					clientState.removeItem(mockup);
+					clientState.lockItem(item, false);
+					if (!succ) return;
+
+					success(res.newItemId);
+				});
+		} else {
+			unlock();
+			success(HttpService.GenerateGUID(false));
+		}
 	}, []);
 
 	useEffect(() => {
@@ -144,7 +162,7 @@ export default function useInventoryInput() {
 				if (targetItem && targetItemGridId && canMerge(state.itemHolding, targetItem)) {
 					merge(state.itemHolding, targetItem);
 				} else if (
-					itemFits(state.grids[state.gridHoveringId], state.itemHolding, targetCell, !state.splittingKeyDown)
+					itemFits(state.grids[state.gridHoveringId], state.itemHolding, targetCell, !state.splitKeyDown)
 				) {
 					move(state.itemHolding, state.gridHoveringId, targetCell);
 				}
