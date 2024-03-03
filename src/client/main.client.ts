@@ -1,11 +1,11 @@
 import { createRoot } from "@rbxts/react-roblox";
 import { Players } from "@rbxts/services";
 import { InventoryEvents } from "shared/events/inventory";
-import clientState from "shared/reflex/clientState";
-import { InventoryMap } from "shared/reflex/inventoryProducer";
-import Router from "shared/ui/components/complex/Router";
+import clientState from "client/reflex/clientState";
 import { Object } from "shared/utils/Object";
 import Tools from "./Tools";
+import { InventoryMap } from "shared/types/inventory";
+import Router from "./ui/components/complex/Router";
 
 const playerGui = Players.LocalPlayer.WaitForChild("PlayerGui") as PlayerGui;
 

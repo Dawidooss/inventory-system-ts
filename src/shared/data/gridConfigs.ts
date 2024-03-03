@@ -1,4 +1,4 @@
-import { Object } from "shared/utils/Object";
+import { GridConfig } from "shared/types/inventory";
 
 const createGridConfig = <T extends Record<string, GridConfig>>(config: T) => config;
 const gridConfigs = createGridConfig({
@@ -11,36 +11,29 @@ const gridConfigs = createGridConfig({
 		height: 2,
 		unified: true,
 		text: "Primary",
+
 		equippable: true,
 		itemTypes: ["tool"],
+		equipPriority: 3,
 	},
 	secondary: {
 		width: 3,
 		height: 2,
 		unified: true,
 		text: "Secondary",
+
 		equippable: true,
+		equipPriority: 2,
 	},
 	melee: {
 		width: 1,
 		height: 2,
 		unified: true,
 		text: "Melee",
+
 		equippable: true,
+		equipPriority: 1,
 	},
 });
-
-const gridConfigsTypes = Object.keys(gridConfigs);
-
-type Extract<T, U> = T extends U ? T : never;
-export type GridTypes = Extract<(typeof gridConfigsTypes)[number], string>;
-export type GridConfig = {
-	width: number;
-	height: number;
-	unified?: boolean;
-	text?: string;
-	equippable?: boolean;
-	itemTypes?: string[];
-};
 
 export default gridConfigs;

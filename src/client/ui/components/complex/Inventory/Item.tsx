@@ -1,10 +1,10 @@
 import { Instant, Linear, toBinding, useMotor, useMouse } from "@rbxts/pretty-react-hooks";
-import React, { Binding, useEffect, useRef } from "@rbxts/react";
+import React, { Binding, useEffect, useRef, useState } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { GuiService, UserInputService } from "@rbxts/services";
+import { GuiService } from "@rbxts/services";
 import getItemConfig from "shared/inventory/getItemConfig";
-import clientState, { RootState } from "shared/reflex/clientState";
-import { Item } from "shared/reflex/inventoryProducer";
+import clientState, { RootState } from "client/reflex/clientState";
+import { Item } from "shared/types/inventory";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import Text from "../../basic/Text";
 
@@ -22,12 +22,28 @@ export default function Item(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
 	const splitVisible = useSelector((state: RootState) => !!state.inventoryProducer.splitData);
+	const [hoverTick, setHoverTick] = useState<number>(-1);
 
 	const [transparency, transparencyAPI] = useMotor(0);
 	const imageRef = useRef<ImageButton>();
 	const mouse = useMouse();
 
 	const config = getItemConfig(props.Data);
+
+	// item description
+	useEffect(() => {
+		let thread: thread;
+		if (hoverTick > 0) {
+			thread = task.delay(0.5 - (tick() - hoverTick), () => {
+				clientState.setDescriptionData([mouse.getValue().X, mouse.getValue().Y, props.Data]);
+			});
+		} else {
+			clientState.setDescriptionData();
+		}
+		return () => {
+			if (thread) task.cancel(thread);
+		};
+	}, [hoverTick]);
 
 	// detect if is hovering and update itemsHovering state
 	useEffect(() => {
@@ -62,57 +78,58 @@ export default function Item(props: Props) {
 	}
 
 	return (
-		<imagebutton
-			Image={config.image}
-			Size={UDim2.fromOffset(cellSize * config.width, cellSize * config.height)}
+		<frame
+			Size={UDim2.fromOffset(
+				cellSize * (props.Data.rotated ? config.height : config.width),
+				cellSize * (props.Data.rotated ? config.width : config.height),
+			)}
 			BackgroundTransparency={1}
-			ScaleType={Enum.ScaleType.Fit}
 			Position={position}
 			AnchorPoint={anchorPoint}
-			ImageTransparency={transparency.map((v) => {
-				if (props.Locked) {
-					if (v === 0) {
-						transparencyAPI(new Linear(1, { velocity: 1.2 }));
-					} else if (v === 1) {
-						transparencyAPI(new Linear(0, { velocity: 1.2 }));
-					}
-				} else {
-					transparencyAPI(new Instant(0));
-				}
-				return v;
-			})}
-			Event={{
-				MouseButton1Down: (rbx) => {
-					if (props.Locked) return;
-					if (splitVisible) return;
-					clientState.setContextData();
-					const offset = rbx.AbsolutePosition.sub(mouse.getValue()).add(GuiService.GetGuiInset()[0]);
-
-					clientState.holdItem(props.Data, [offset.X, offset.Y]);
-					clientState.setItemHovering(props.Data, false);
-				},
-				MouseButton2Click: (rbx) => {
-					if (props.Locked) return;
-					if (splitVisible) return;
-
-					const mouseLocation = mouse.getValue().sub(GuiService.GetGuiInset()[0]);
-					clientState.setContextData([
-						mouseLocation.X,
-						mouseLocation.Y,
-						props.Data,
-						{
-							drop: {
-								color: Color3.fromRGB(255, 0, 0),
-								callback: (item) => {
-									clientState.removeItem(props.Data);
-								},
-							},
-						},
-					]);
-				},
-			}}
-			ref={imageRef}
 		>
+			<imagebutton
+				Size={
+					props.Data.rotated
+						? UDim2.fromScale(config.width / config.height, config.height / config.width)
+						: UDim2.fromScale(1, 1)
+				}
+				Position={props.Data.rotated ? UDim2.fromScale(0.25, -0.5) : undefined}
+				Image={config.image}
+				BackgroundTransparency={1}
+				ScaleType={Enum.ScaleType.Fit}
+				Rotation={props.Data.rotated ? -90 : 0}
+				ImageTransparency={transparency.map((v) => {
+					if (props.Locked) {
+						if (v === 0) {
+							transparencyAPI(new Linear(1, { velocity: 1.2 }));
+						} else if (v === 1) {
+							transparencyAPI(new Linear(0, { velocity: 1.2 }));
+						}
+					} else {
+						transparencyAPI(new Instant(0));
+					}
+					return v;
+				})}
+				Event={{
+					MouseButton1Down: (rbx) => {
+						if (props.Locked) return;
+						if (splitVisible) return;
+						clientState.setContextData();
+						const offset = rbx.AbsolutePosition.sub(mouse.getValue()).add(GuiService.GetGuiInset()[0]);
+
+						clientState.holdItem(props.Data, [offset.X, offset.Y]);
+						clientState.setItemHovering(props.Data, false);
+					},
+					MouseEnter: () => {
+						if (props.Locked) return;
+						setHoverTick(tick());
+					},
+					MouseLeave: () => {
+						setHoverTick(-1);
+					},
+				}}
+				ref={imageRef}
+			/>
 			{props.Data.quantity > 1 && !props.Locked && (
 				<Text
 					Text={`${props.Data.quantity}`}
@@ -121,6 +138,6 @@ export default function Item(props: Props) {
 					Size={new UDim2(1, 0, 0, cellSize / 1.75)}
 				/>
 			)}
-		</imagebutton>
+		</frame>
 	);
 }

@@ -10,6 +10,8 @@ type Props = {
 	Transparency?: number;
 	Bold?: boolean;
 	Rotation?: number;
+	AutomaticSize?: Enum.AutomaticSize;
+	TextSize?: number;
 };
 
 export default function Text(props: React.PropsWithChildren<Props>) {
@@ -25,10 +27,12 @@ export default function Text(props: React.PropsWithChildren<Props>) {
 			Position={props.Position}
 			AnchorPoint={props.AnchorPoint}
 			Size={props.Size}
-			TextScaled={true}
+			TextScaled={!props.TextSize}
+			TextSize={props.TextSize}
 			BackgroundTransparency={1}
 			TextXAlignment={props.TextXAlignment || Enum.TextXAlignment.Left}
 			TextTransparency={props.Transparency || 0.4}
+			AutomaticSize={props.AutomaticSize}
 		>
 			{props.children}
 		</textlabel>

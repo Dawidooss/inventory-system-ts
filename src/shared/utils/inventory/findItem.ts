@@ -1,5 +1,6 @@
+import { Grid, Item } from "shared/types/inventory";
 import { Object } from "../Object";
-import { Grid, Item } from "shared/reflex/inventoryProducer";
+import { NamedExoticComponent } from "@rbxts/react";
 
 export function findItem(grids: { [gridId: string]: Grid }, itemId: string): [Item | undefined, string | undefined] {
 	for (let [gridId, grid] of Object.entries(grids)) {

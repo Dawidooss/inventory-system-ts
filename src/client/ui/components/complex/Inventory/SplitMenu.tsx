@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef } from "@rbxts/react";
 import Text from "../../basic/Text";
-import useSlider from "shared/ui/hooks/useSlider";
 import Button from "../../basic/Button";
 import { useSelector } from "@rbxts/react-reflex";
-import clientState, { RootState } from "shared/reflex/clientState";
+import clientState, { RootState } from "client/reflex/clientState";
 import getItemConfig from "shared/inventory/getItemConfig";
 import Full from "../../basic/Full";
 import { SliderConfig } from "shared/utils/Slider";
+import useSlider from "client/ui/hooks/useSlider";
 
 type Props = {};
 
@@ -124,9 +124,11 @@ export default function SplitMenu(props: Props) {
 				Position={UDim2.fromScale(0.4, 0.7)}
 				Size={UDim2.fromScale(0.25, 0.25)}
 				Bold
-				OnClick={() => {
-					clientState.setSplitData();
-					callback && callback(false, slider?.GetValue() || 0);
+				Events={{
+					MouseButton1Click: () => {
+						clientState.setSplitData();
+						callback && callback(false, slider?.GetValue() || 0);
+					},
 				}}
 			/>
 			<Button
@@ -135,9 +137,11 @@ export default function SplitMenu(props: Props) {
 				Size={UDim2.fromScale(0.25, 0.25)}
 				Color={Color3.fromRGB(81, 144, 59)}
 				Bold
-				OnClick={() => {
-					clientState.setSplitData();
-					callback && callback(true, slider?.GetValue() || 0);
+				Events={{
+					MouseButton1Click: () => {
+						clientState.setSplitData();
+						callback && callback(true, slider?.GetValue() || 0);
+					},
 				}}
 			/>
 		</imagelabel>

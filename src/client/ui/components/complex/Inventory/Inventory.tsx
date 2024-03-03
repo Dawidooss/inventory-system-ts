@@ -1,6 +1,6 @@
 import React from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { RootState } from "shared/reflex/clientState";
+import { RootState } from "client/reflex/clientState";
 import Text from "../../basic/Text";
 import Grid from "./Grid";
 

@@ -1,7 +1,7 @@
 import { createProducer } from "@rbxts/reflex";
 import { Workspace } from "@rbxts/services";
-import { GridTypes } from "shared/data/gridConfigs";
 import getItemConfig from "shared/inventory/getItemConfig";
+import { ContextMenuOptions, Grid, InventoryMap, Item } from "shared/types/inventory";
 import { findItem } from "shared/utils/inventory/findItem";
 
 const camera = Workspace.CurrentCamera!;
@@ -10,8 +10,10 @@ export interface InventoryProducer {
 	visible: boolean;
 	cellSize: number;
 	splitKeyDown: boolean;
+
 	splitData?: [number, number, Item, (success: boolean, quantity: number) => void];
 	contextData?: [x: number, y: number, item: Item, options: ContextMenuOptions];
+	descriptionData?: [x: number, y: number, item: Item];
 
 	inventories: { [id: string]: InventoryMap };
 	grids: { [id: string]: Grid };
@@ -57,6 +59,11 @@ const inventoryProducer = createProducer(initialState, {
 	setContextData: (state: InventoryProducer, contextData?: InventoryProducer["contextData"]) => ({
 		...state,
 		contextData,
+	}),
+
+	setDescriptionData: (state: InventoryProducer, descriptionData?: InventoryProducer["descriptionData"]) => ({
+		...state,
+		descriptionData,
 	}),
 
 	setSplitData: (state: InventoryProducer, splitData?: InventoryProducer["splitData"]) => ({
@@ -198,34 +205,11 @@ const inventoryProducer = createProducer(initialState, {
 		item.quantity = quantity;
 		return { ...state, grids: { ...state.grids } };
 	},
+
+	rotateItem: (state: InventoryProducer, item: Item, rotated?: boolean) => {
+		item.rotated = rotated !== undefined ? rotated : !item.rotated;
+		return { ...state, grids: { ...state.grids } };
+	},
 });
-
-export type ContextMenuOptions = {
-	[key: string]: {
-		color: Color3;
-		callback: (item: Item) => void;
-	};
-};
-
-export type Item = {
-	id: string;
-	quantity: number;
-	name: string;
-	x: number;
-	y: number;
-	locked: boolean;
-	mockup?: boolean;
-};
-
-export type Tool = Item & {};
-
-export type Grid = {
-	id: string;
-	name: string;
-	type: GridTypes;
-	items: Item[];
-};
-
-export type InventoryMap = { [gridName: string]: string };
 
 export default inventoryProducer;

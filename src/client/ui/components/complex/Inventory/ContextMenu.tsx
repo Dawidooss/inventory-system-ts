@@ -1,11 +1,9 @@
 import React from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import getItemConfig from "shared/inventory/getItemConfig";
-import clientState, { RootState } from "shared/reflex/clientState";
+import clientState, { RootState } from "client/reflex/clientState";
+import { Object } from "shared/utils/Object";
 import Button from "../../basic/Button";
 import Full from "../../basic/Full";
-import Text from "../../basic/Text";
-import { Object } from "shared/utils/Object";
 
 type Props = {};
 
@@ -29,17 +27,18 @@ export default function ContextMenu(props: Props) {
 				ApplyStrokeMode={Enum.ApplyStrokeMode.Border}
 				Thickness={3}
 			/>
-			<uilistlayout />
+			<uilistlayout SortOrder={Enum.SortOrder.LayoutOrder} />
 			{Object.entries(options).map(([text, data]) => (
 				<Button
-					Text={text}
-					Color={data.color}
+					Text={` ${text}`}
+					Color={data.color || Color3.fromRGB(40, 40, 40)}
+					LayoutOrder={data.order}
 					Size={new UDim2(1, 0, 0, cellSize / 1.5)}
-					Bold
-					OnClick={() => {
-						print("click");
-						data.callback(item);
-						clientState.setContextData();
+					Events={{
+						MouseButton1Click: () => {
+							data.callback(item);
+							clientState.setContextData();
+						},
 					}}
 				/>
 			))}

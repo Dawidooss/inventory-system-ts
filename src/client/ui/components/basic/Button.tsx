@@ -8,8 +8,9 @@ type Props = {
 	TextXAlignment?: Enum.TextXAlignment;
 	Transparency?: number;
 	Bold?: boolean;
+	LayoutOrder?: number;
 
-	OnClick?: () => void;
+	Events?: React.InstanceEvent<TextButton>;
 };
 
 export default function Button(props: React.PropsWithChildren<Props>) {
@@ -24,12 +25,11 @@ export default function Button(props: React.PropsWithChildren<Props>) {
 			Position={props.Position}
 			Size={props.Size}
 			TextScaled={true}
+			LayoutOrder={props.LayoutOrder}
 			BackgroundTransparency={1}
 			TextXAlignment={props.TextXAlignment || Enum.TextXAlignment.Left}
 			TextTransparency={props.Transparency || 0.4}
-			Event={{
-				MouseButton1Click: props?.OnClick,
-			}}
+			Event={props.Events}
 		>
 			{props.children}
 		</textbutton>

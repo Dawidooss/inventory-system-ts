@@ -1,13 +1,12 @@
 import { useMouse } from "@rbxts/pretty-react-hooks";
 import { useSelector } from "@rbxts/react-reflex";
 import { GuiService, UserInputService } from "@rbxts/services";
-import clientState, { RootState } from "shared/reflex/clientState";
-import { Grid } from "shared/reflex/inventoryProducer";
+import clientState, { RootState } from "client/reflex/clientState";
+import { ColorMap, Grid } from "shared/types/inventory";
 import canMerge from "shared/utils/inventory/canMerge";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import itemFits from "shared/utils/inventory/itemFits";
-import { ColorMap } from "./useGrid";
 
 export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | undefined>, grid: Grid) {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
@@ -53,6 +52,8 @@ export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | u
 				const fits = itemFits(grid, itemHolding, [0, 0], true);
 				color = fits ? Color3.fromRGB(0, 255, 0) : Color3.fromRGB(255, 0, 0);
 			}
+			// } else if (itemHolding && itemFits(grid, itemHolding, [0, 0], true)) {
+			// color = Color3.fromRGB(3, 255, 120);
 		} else if (grid.items[0]) {
 			color = Color3.fromRGB(255, 175, 78);
 		}
@@ -67,7 +68,7 @@ export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | u
 	}
 
 	useMouse(() => {
-		if (itemHolding) updateHoveringCell();
+		updateHoveringCell();
 	});
 
 	return colorMap;

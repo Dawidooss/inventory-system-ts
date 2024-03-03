@@ -1,8 +1,5 @@
-import { Grid, Item } from "shared/reflex/inventoryProducer";
+import { Grid, Item } from "shared/types/inventory";
 import getItemConfig from "../../inventory/getItemConfig";
-import { Object } from "../Object";
-import isRectInRect from "../isRectTouchingRect";
-import { config } from "@rbxts/ripple";
 import isRectTouchingRect from "../isRectTouchingRect";
 import getGridConfig from "./getGridConfig";
 
@@ -10,8 +7,11 @@ export default function itemFits(grid: Grid, item: Item, position: [number, numb
 	const itemConfig = getItemConfig(item);
 	const gridConfig = getGridConfig(grid);
 
-	if (position[0] < 0 || position[0] > gridConfig.width - itemConfig.width) return false;
-	if (position[1] < 0 || position[1] > gridConfig.height - itemConfig.height) return false;
+	print(position);
+	if (position[0] < 0 || position[0] > gridConfig.width - (item.rotated ? itemConfig.height : itemConfig.width))
+		return false;
+	if (position[1] < 0 || position[1] > gridConfig.height - (item.rotated ? itemConfig.width : itemConfig.height))
+		return false;
 
 	if (gridConfig.itemTypes && !gridConfig.itemTypes.find((v) => v === itemConfig.type)) return;
 
@@ -31,8 +31,8 @@ export default function itemFits(grid: Grid, item: Item, position: [number, numb
 				itemConfig.height,
 				otherItem.x,
 				otherItem.y,
-				otherItemConfig.width,
-				otherItemConfig.height,
+				otherItem.rotated ? otherItemConfig.height : otherItemConfig.width,
+				otherItem.rotated ? otherItemConfig.width : otherItemConfig.height,
 			)
 		)
 			return false;

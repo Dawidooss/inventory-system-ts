@@ -1,8 +1,8 @@
 import Maid, { Destroyable } from "@rbxts/maid";
 import { Players } from "@rbxts/services";
 import Signal from "@rbxts/signal";
-import clientState from "shared/reflex/clientState";
-import { Grid, InventoryMap, Tool } from "shared/reflex/inventoryProducer";
+import clientState from "client/reflex/clientState";
+import { Grid, InventoryMap } from "shared/types/inventory";
 import { Object } from "shared/utils/Object";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
 

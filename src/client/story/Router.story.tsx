@@ -1,9 +1,9 @@
 import React from "@rbxts/react";
 import { createRoot } from "@rbxts/react-roblox";
-import clientState from "shared/reflex/clientState";
+import clientState from "client/reflex/clientState";
 import { HttpService, Players } from "@rbxts/services";
 import ToolsHandler from "client/Tools";
-import Router from "shared/ui/components/complex/Router";
+import Router from "client/ui/components/complex/Router";
 
 export = (target: Frame): (() => void) => {
 	const root = createRoot(target);
@@ -24,7 +24,7 @@ export = (target: Frame): (() => void) => {
 			{
 				id: HttpService.GenerateGUID(false),
 				name: "Szabla",
-				quantity: 3,
+				quantity: 1,
 				x: 1,
 				y: 1,
 				locked: false,

@@ -1,14 +1,14 @@
 import React, { useRef } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { RootState } from "shared/reflex/clientState";
-import { Grid } from "shared/reflex/inventoryProducer";
-import useGrid from "shared/ui/hooks/useGrid";
-import useUnifiedGrid from "shared/ui/hooks/useUnifiedGrid";
+import { RootState } from "client/reflex/clientState";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
 import Full from "../../basic/Full";
 import Text from "../../basic/Text";
 import Cell from "./Cell";
 import Item from "./Item";
+import { Grid } from "shared/types/inventory";
+import useUnifiedGrid from "client/ui/hooks/useUnifiedGrid";
+import useGrid from "client/ui/hooks/useGrid";
 
 type Props = {
 	Position: UDim2;

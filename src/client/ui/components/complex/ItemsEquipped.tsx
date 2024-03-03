@@ -1,7 +1,7 @@
 import React from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
 import { Players } from "@rbxts/services";
-import { RootState } from "shared/reflex/clientState";
+import { RootState } from "client/reflex/clientState";
 import { Object } from "shared/utils/Object";
 
 export default function ItemsEquipped() {

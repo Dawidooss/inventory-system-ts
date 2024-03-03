@@ -1,4 +1,4 @@
-import { Item } from "shared/reflex/inventoryProducer";
+import { Item } from "shared/types/inventory";
 import getItemConfig from "../../inventory/getItemConfig";
 
 export default function canMerge(item: Item, targetItem: Item) {

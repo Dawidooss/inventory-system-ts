@@ -1,6 +1,6 @@
 import { HttpService, Players } from "@rbxts/services";
 import { InventoryEvents } from "shared/events/inventory";
-import { Grid } from "shared/reflex/inventoryProducer";
+import { Grid } from "shared/types/inventory";
 import check from "shared/utils/check";
 import canMerge from "shared/utils/inventory/canMerge";
 import itemFits from "shared/utils/inventory/itemFits";
@@ -27,6 +27,15 @@ Players.PlayerAdded.Connect((player) => {
 				quantity: 3,
 				x: 1,
 				y: 1,
+
+				locked: false,
+			},
+			{
+				id: HttpService.GenerateGUID(false),
+				name: "Szabla",
+				quantity: 1,
+				x: 5,
+				y: 3,
 				locked: false,
 			},
 			{

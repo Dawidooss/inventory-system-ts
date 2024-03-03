@@ -1,14 +1,15 @@
 import { useViewport } from "@rbxts/pretty-react-hooks";
 import React from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
-import { GuiService, Players, Workspace } from "@rbxts/services";
-import clientState, { RootState } from "shared/reflex/clientState";
-import useInventoryInput from "shared/ui/hooks/useInventoryInput";
+import { DataStoreService, GuiService, Players, Workspace } from "@rbxts/services";
+import clientState, { RootState } from "client/reflex/clientState";
 import Full from "../../basic/Full";
 import Inventory from "./Inventory";
 import Item from "./Item";
 import SplitMenu from "./SplitMenu";
 import ContextMenu from "./ContextMenu";
+import useInventoryInput from "client/ui/hooks/useInventoryInput";
+import Description from "./Description";
 
 const camera = Workspace.CurrentCamera!;
 
@@ -44,6 +45,7 @@ export default function InventoryRouter() {
 			)}
 			<SplitMenu />
 			<ContextMenu />
+			{/* <Description /> */}
 		</Full>
 	) : (
 		<></>

@@ -1,5 +1,4 @@
-import { GridTypes } from "shared/data/gridConfigs";
-import { Grid, Item } from "shared/reflex/inventoryProducer";
+import { Grid, GridTypes, Item } from "shared/types/inventory";
 import Red from "shared/utils/Networking/Red";
 import { Sedes } from "shared/utils/Networking/Sedes";
 
@@ -41,6 +40,11 @@ export namespace InventoryEvents {
 			targetGridId: Sedes.ToString(),
 			quantity: Sedes.ToUnsigned(64),
 		}),
+
+		dropItemIn: new Sedes.Serializer({
+			itemId: Sedes.ToString(),
+			gridId: Sedes.ToString(),
+		}),
 	};
 	export const events = {};
 
@@ -48,5 +52,6 @@ export namespace InventoryEvents {
 		fetchInventory: Red.Function("fetchGrid", serializers.fetchInventoryIn, serializers.fetchInventoryOut),
 		moveItem: Red.Function("moveItem", serializers.moveItemIn, serializers.moveItemOut),
 		mergeItems: Red.Function("mergeItems", serializers.mergeItemsIn, Sedes.NoSerializer),
+		dropItem: Red.Function("dropItem", serializers.dropItemIn, Sedes.NoSerializer),
 	};
 }

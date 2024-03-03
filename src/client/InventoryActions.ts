@@ -1,30 +1,17 @@
-import { useKeyPress } from "@rbxts/pretty-react-hooks";
-import { useCallback, useEffect, useState } from "@rbxts/react";
-import { useSelector } from "@rbxts/react-reflex";
-import { GuiService, HttpService, RunService, UserInputService } from "@rbxts/services";
-import { InventoryEvents } from "shared/events/inventory";
-import getItemConfig from "shared/inventory/getItemConfig";
-import clientState, { RootState } from "shared/reflex/clientState";
-import { Item } from "shared/reflex/inventoryProducer";
-import canMerge from "shared/utils/inventory/canMerge";
+import { ContextMenuOptions, Item } from "shared/types/inventory";
+import clientState from "./reflex/clientState";
+import { GuiService, HttpService, Players, RunService, UserInputService } from "@rbxts/services";
 import { findItem } from "shared/utils/inventory/findItem";
-import itemFits from "shared/utils/inventory/itemFits";
-import useKeyOncePressed from "./useKeyOncePressed";
+import getItemConfig from "shared/inventory/getItemConfig";
+import { InventoryEvents } from "shared/events/inventory";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
+import findSpace from "shared/utils/inventory/findSpace";
+import getCompatibleUnifiedGrids from "shared/utils/inventory/getCompatibleUnifiedGrids";
 
-export default function useInventoryInput() {
-	const splitKeyDown = useSelector((state: RootState) => state.inventoryProducer.splitKeyDown);
-	if (useKeyPress(["LeftControl"]) !== splitKeyDown) {
-		clientState.setSplitKeyDown(!splitKeyDown);
-	}
+const guiInset = GuiService.GetGuiInset()[0];
 
-	const guiInset = GuiService.GetGuiInset()[0];
-
-	useKeyOncePressed(["E"], () => {
-		clientState.showInventory(!clientState.getState().inventoryProducer.visible);
-	});
-
-	const getQuantityToWorkWith = useCallback((item: Item): [boolean, number] => {
+export namespace InventoryActions {
+	export const getQuantityToWorkWith = (item: Item): [boolean, number] => {
 		const state = clientState.getState().inventoryProducer;
 		if (!state.splitKeyDown || item.quantity <= 1) return [true, item.quantity];
 		if (!state.splitKeyDown || item.quantity === 2) return [true, 1];
@@ -43,9 +30,33 @@ export default function useInventoryInput() {
 		while (success === undefined) wait();
 
 		return [success!, quantity!];
-	}, []);
+	};
 
-	const merge = useCallback(async (item: Item, targetItem: Item) => {
+	export const drop = (item: Item) => {
+		const grids = clientState.getState().inventoryProducer.grids;
+		const [, itemGridId] = findItem(grids, item.id);
+
+		clientState.lockItem(item, true);
+
+		if (RunService.IsRunning()) {
+			InventoryEvents.functions.dropItem
+				.Call({
+					itemId: item.id,
+					gridId: itemGridId!,
+				})
+				.After((succ) => {
+					if (succ) {
+						clientState.removeItem(item);
+					} else {
+						clientState.lockItem(item, false);
+					}
+				});
+		} else {
+			clientState.removeItem(item);
+		}
+	};
+
+	export const merge = (item: Item, targetItem: Item) => {
 		const grids = clientState.getState().inventoryProducer.grids;
 		const [, itemGridId] = findItem(grids, item.id);
 		const [, targetGridId] = findItem(grids, targetItem.id);
@@ -90,9 +101,9 @@ export default function useInventoryInput() {
 			unlock();
 			success();
 		}
-	}, []);
+	};
 
-	const move = useCallback(async (item: Item, targetGridId: string, targetCell: [number, number]) => {
+	export const move = (item: Item, targetGridId: string, targetCell: [number, number]) => {
 		const [_, itemGridId] = findItem(clientState.getState().inventoryProducer.grids, item.id);
 		clientState.lockItem(item, true);
 
@@ -139,40 +150,49 @@ export default function useInventoryInput() {
 			unlock();
 			success(HttpService.GenerateGUID(false));
 		}
-	}, []);
+	};
 
-	useEffect(() => {
-		const conn = UserInputService.InputEnded.Connect((input) => {
-			const state = clientState.getState().inventoryProducer;
-			if (input.UserInputType !== Enum.UserInputType.MouseButton1) return;
+	export const getContextMenuOptionsForItem = (item: Item): ContextMenuOptions => {
+		const state = clientState.getState().inventoryProducer;
 
-			if (state.cellHovering && state.gridHoveringId && state.itemHolding) {
-				const targetItem: Item | undefined = state.itemsHovering.filter((v) => v !== state.itemHolding)[0];
-				const [, targetItemGridId] = targetItem ? findItem(state.grids, targetItem.id) : [];
-				const gridHoveringConfig = state.gridHoveringId && getGridConfig(state.grids[state.gridHoveringId]);
+		const [_, gridId] = findItem(state.grids, item.id);
+		const grid = state.grids[gridId!];
+		const gridConfig = getGridConfig(grid);
 
-				let targetCell = state.cellHovering;
-				if (gridHoveringConfig && !gridHoveringConfig.unified) {
-					targetCell = [
-						targetCell[0] - state.itemHoldingCellOffset[0],
-						targetCell[1] - state.itemHoldingCellOffset[1],
-					];
-				}
-
-				if (targetItem && targetItemGridId && canMerge(state.itemHolding, targetItem)) {
-					merge(state.itemHolding, targetItem);
-				} else if (
-					itemFits(state.grids[state.gridHoveringId], state.itemHolding, targetCell, !state.splitKeyDown)
-				) {
-					move(state.itemHolding, state.gridHoveringId, targetCell);
-				}
-			}
-
-			clientState.holdItem();
-		});
-
-		return () => {
-			conn.Disconnect();
+		const options: ContextMenuOptions = {
+			Wyrzuć: {
+				order: 10,
+				color: Color3.fromRGB(145, 10, 10),
+				callback: (item) => {
+					drop(item);
+				},
+			},
 		};
-	}, []);
+
+		if (gridConfig.unified && gridConfig.equippable) {
+			const backpackGridId = state.inventories[tostring(Players.LocalPlayer.UserId)].backpack;
+			const backpack = state.grids[backpackGridId];
+			const [hasSpace, position] = findSpace(backpack, item);
+			if (hasSpace) {
+				options.Zdejmij = {
+					order: -10,
+					callback: (item) => {
+						move(item, backpack.id, position);
+					},
+				};
+			}
+		} else {
+			const compatibleUnifiedGrids = getCompatibleUnifiedGrids(state.grids, item);
+			if (compatibleUnifiedGrids[0]) {
+				options.Załóż = {
+					order: -10,
+					callback: (item) => {
+						move(item, compatibleUnifiedGrids[0].id, [0, 0]);
+					},
+				};
+			}
+		}
+
+		return options;
+	};
 }

@@ -2,15 +2,13 @@ import { useMouse } from "@rbxts/pretty-react-hooks";
 import { useState } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
 import { GuiService, UserInputService } from "@rbxts/services";
+import clientState, { RootState } from "client/reflex/clientState";
 import getItemConfig from "shared/inventory/getItemConfig";
-import clientState, { RootState } from "shared/reflex/clientState";
-import { Grid } from "shared/reflex/inventoryProducer";
+import { ColorMap, Grid } from "shared/types/inventory";
 import canMerge from "shared/utils/inventory/canMerge";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import itemFits from "shared/utils/inventory/itemFits";
-
-export type ColorMap = { [key: number]: { [key: number]: Color3 | undefined } };
 
 export default function useGrid(gridRef: React.MutableRefObject<Frame | undefined>, grid: Grid) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
@@ -64,8 +62,8 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 		// loop through items and add them to colorMap as occupied
 		for (let [, item] of pairs(grid.items)) {
 			const itemConfig = getItemConfig(item);
-			for (let sX of $range(0, itemConfig.width - 1)) {
-				for (let sY of $range(0, itemConfig.height - 1)) {
+			for (let sX of $range(0, (item.rotated ? itemConfig.height : itemConfig.width) - 1)) {
+				for (let sY of $range(0, (item.rotated ? itemConfig.width : itemConfig.height) - 1)) {
 					// don't override other colors
 					colorMap[item.x + sX][item.y + sY] = Color3.fromRGB(255, 175, 78);
 				}
@@ -76,11 +74,17 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 		if (itemHolding && cellHovering && gridHoveringId === grid.id) {
 			const targetItem = itemsHovering.filter((v) => v !== itemHolding)[0];
 			const itemConfig = getItemConfig(itemHolding?.name);
+
 			let [x, y] = [cellHovering[0], cellHovering[1]];
 
-			x -= itemHoldingCellOffset[0];
-			y -= itemHoldingCellOffset[1];
-
+			if (!itemHolding.rotated) {
+				x -= itemHoldingCellOffset[0];
+				y -= itemHoldingCellOffset[1];
+			} else {
+				x -= itemHoldingCellOffset[0];
+				y -= math.clamp(itemHoldingCellOffset[1] + itemConfig.width - itemConfig.height, 0, math.huge);
+			}
+			print(x, y);
 			if (targetItem) {
 				// merge case
 				const _canMerge = canMerge(itemHolding, targetItem);
@@ -94,8 +98,8 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 				const fits = itemFits(grid, itemHolding, [x, y], !splitKeyDown);
 
 				// loop cells and update colors
-				for (let sX of $range(0, itemConfig.width - 1)) {
-					for (let sY of $range(0, itemConfig.height - 1)) {
+				for (let sX of $range(0, (itemHolding.rotated ? itemConfig.height : itemConfig.width) - 1)) {
+					for (let sY of $range(0, (itemHolding.rotated ? itemConfig.width : itemConfig.height) - 1)) {
 						// out of bonds
 						if (x + sX >= config.width || y + sY >= config.height || x + sX < 0 || y + sY < 0) continue;
 
@@ -107,9 +111,7 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 	}
 
 	useMouse(() => {
-		if (itemHoldingCellOffset) {
-			updateHoveringCell();
-		}
+		updateHoveringCell();
 	});
 
 	return colorMap;
