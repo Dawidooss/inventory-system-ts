@@ -32,7 +32,7 @@ export default function InventoryRouter() {
 	});
 
 	return visible ? (
-		<Full>
+		<>
 			<Inventory inventoryId={`${Players.LocalPlayer.UserId}`} Position={UDim2.fromScale(0.02, 0.02)} />
 			{itemHolding ? (
 				<Item
@@ -41,12 +41,12 @@ export default function InventoryRouter() {
 					Offset={[itemHoldingOffset[0] - guiInset.X, itemHoldingOffset[1] - guiInset.Y]}
 				/>
 			) : (
-				<Full />
+				<></>
 			)}
 			<SplitMenu />
 			<ContextMenu />
-			{/* <Description /> */}
-		</Full>
+			<Description />
+		</>
 	) : (
 		<></>
 	);

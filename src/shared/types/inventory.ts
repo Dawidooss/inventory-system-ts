@@ -11,7 +11,17 @@ export type Item = {
 	y: number;
 	locked: boolean;
 	mockup?: boolean;
-	rotated?: boolean;
+};
+
+export type ItemConfig = {
+	name: string;
+	image: string;
+	description?: string;
+
+	width: number;
+	height: number;
+	max: number;
+	type?: string;
 };
 
 export type Tool = Item & {};

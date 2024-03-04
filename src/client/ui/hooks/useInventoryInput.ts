@@ -22,13 +22,6 @@ export default function useInventoryInput() {
 		clientState.showInventory(!clientState.getState().inventoryProducer.visible);
 	});
 
-	useKeyOncePressed(["R"], () => {
-		const state = clientState.getState().inventoryProducer;
-		if (state.itemHolding) {
-			clientState.rotateItem(state.itemHolding);
-		}
-	});
-
 	useEffect(() => {
 		const maid = new Maid();
 

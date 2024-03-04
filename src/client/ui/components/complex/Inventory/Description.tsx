@@ -4,7 +4,7 @@ import clientState, { RootState } from "client/reflex/clientState";
 import { Object } from "shared/utils/Object";
 import Button from "../../basic/Button";
 import Full from "../../basic/Full";
-import getItemConfig from "shared/inventory/getItemConfig";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
 import Text from "../../basic/Text";
 
 type Props = {};
@@ -35,9 +35,10 @@ function splitTextIntoLines(text: string, maxLength: number): string {
 export default function Description(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const [x, y, item] = useSelector((state: RootState) => state.inventoryProducer.descriptionData) || [];
+	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 
 	const itemConfig = item && getItemConfig(item);
-	const visible = item && itemConfig;
+	const visible = item && itemConfig && !itemHolding;
 
 	return visible ? (
 		<imagelabel
@@ -78,6 +79,6 @@ export default function Description(props: Props) {
 			)}
 		</imagelabel>
 	) : (
-		<Full />
+		<></>
 	);
 }

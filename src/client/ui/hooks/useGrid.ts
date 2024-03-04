@@ -3,7 +3,7 @@ import { useState } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
 import { GuiService, UserInputService } from "@rbxts/services";
 import clientState, { RootState } from "client/reflex/clientState";
-import getItemConfig from "shared/inventory/getItemConfig";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
 import { ColorMap, Grid } from "shared/types/inventory";
 import canMerge from "shared/utils/inventory/canMerge";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
@@ -61,9 +61,10 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 
 		// loop through items and add them to colorMap as occupied
 		for (let [, item] of pairs(grid.items)) {
+			if (item === itemHolding) continue;
 			const itemConfig = getItemConfig(item);
-			for (let sX of $range(0, (item.rotated ? itemConfig.height : itemConfig.width) - 1)) {
-				for (let sY of $range(0, (item.rotated ? itemConfig.width : itemConfig.height) - 1)) {
+			for (let sX of $range(0, itemConfig.width - 1)) {
+				for (let sY of $range(0, itemConfig.height - 1)) {
 					// don't override other colors
 					colorMap[item.x + sX][item.y + sY] = Color3.fromRGB(255, 175, 78);
 				}
@@ -77,14 +78,9 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 
 			let [x, y] = [cellHovering[0], cellHovering[1]];
 
-			if (!itemHolding.rotated) {
-				x -= itemHoldingCellOffset[0];
-				y -= itemHoldingCellOffset[1];
-			} else {
-				x -= itemHoldingCellOffset[0];
-				y -= math.clamp(itemHoldingCellOffset[1] + itemConfig.width - itemConfig.height, 0, math.huge);
-			}
-			print(x, y);
+			x -= itemHoldingCellOffset[0];
+			y -= itemHoldingCellOffset[1];
+
 			if (targetItem) {
 				// merge case
 				const _canMerge = canMerge(itemHolding, targetItem);
@@ -98,8 +94,8 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 				const fits = itemFits(grid, itemHolding, [x, y], !splitKeyDown);
 
 				// loop cells and update colors
-				for (let sX of $range(0, (itemHolding.rotated ? itemConfig.height : itemConfig.width) - 1)) {
-					for (let sY of $range(0, (itemHolding.rotated ? itemConfig.width : itemConfig.height) - 1)) {
+				for (let sX of $range(0, itemConfig.width - 1)) {
+					for (let sY of $range(0, itemConfig.height - 1)) {
 						// out of bonds
 						if (x + sX >= config.width || y + sY >= config.height || x + sX < 0 || y + sY < 0) continue;
 

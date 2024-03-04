@@ -1,6 +1,6 @@
 import { createProducer } from "@rbxts/reflex";
 import { Workspace } from "@rbxts/services";
-import getItemConfig from "shared/inventory/getItemConfig";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
 import { ContextMenuOptions, Grid, InventoryMap, Item } from "shared/types/inventory";
 import { findItem } from "shared/utils/inventory/findItem";
 
@@ -203,11 +203,6 @@ const inventoryProducer = createProducer(initialState, {
 
 	setItemQuantity: (state: InventoryProducer, item: Item, quantity: number) => {
 		item.quantity = quantity;
-		return { ...state, grids: { ...state.grids } };
-	},
-
-	rotateItem: (state: InventoryProducer, item: Item, rotated?: boolean) => {
-		item.rotated = rotated !== undefined ? rotated : !item.rotated;
 		return { ...state, grids: { ...state.grids } };
 	},
 });

@@ -2,7 +2,7 @@ import { ContextMenuOptions, Item } from "shared/types/inventory";
 import clientState from "./reflex/clientState";
 import { GuiService, HttpService, Players, RunService, UserInputService } from "@rbxts/services";
 import { findItem } from "shared/utils/inventory/findItem";
-import getItemConfig from "shared/inventory/getItemConfig";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
 import { InventoryEvents } from "shared/events/inventory";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
 import findSpace from "shared/utils/inventory/findSpace";
@@ -32,7 +32,7 @@ export namespace InventoryActions {
 		return [success!, quantity!];
 	};
 
-	export const drop = (item: Item) => {
+	export const drop = async (item: Item) => {
 		const grids = clientState.getState().inventoryProducer.grids;
 		const [, itemGridId] = findItem(grids, item.id);
 
@@ -52,11 +52,12 @@ export namespace InventoryActions {
 					}
 				});
 		} else {
+			// for hoarcekat purpose
 			clientState.removeItem(item);
 		}
 	};
 
-	export const merge = (item: Item, targetItem: Item) => {
+	export const merge = async (item: Item, targetItem: Item) => {
 		const grids = clientState.getState().inventoryProducer.grids;
 		const [, itemGridId] = findItem(grids, item.id);
 		const [, targetGridId] = findItem(grids, targetItem.id);
@@ -98,20 +99,23 @@ export namespace InventoryActions {
 					success();
 				});
 		} else {
+			// for hoarcekat purpose
 			unlock();
 			success();
 		}
 	};
 
-	export const move = (item: Item, targetGridId: string, targetCell: [number, number]) => {
+	export const move = async (item: Item, targetGridId: string, targetCell: [number, number]) => {
 		const [_, itemGridId] = findItem(clientState.getState().inventoryProducer.grids, item.id);
-		clientState.lockItem(item, true);
+
+		if (itemGridId === targetGridId && item.x === targetCell[0] && item.y === targetCell[1]) return;
 
 		const mockup = { ...item, x: targetCell[0], y: targetCell[1] };
 		mockup.id = HttpService.GenerateGUID(false);
 		mockup.mockup = true;
-
 		clientState.addItem(targetGridId, mockup);
+
+		clientState.lockItem(item, true);
 		clientState.lockItem(mockup, true);
 
 		const unlock = () => {
@@ -147,6 +151,7 @@ export namespace InventoryActions {
 					success(res.newItemId);
 				});
 		} else {
+			// for hoarcekat purpose
 			unlock();
 			success(HttpService.GenerateGUID(false));
 		}

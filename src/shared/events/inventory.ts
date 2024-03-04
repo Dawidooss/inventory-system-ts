@@ -45,8 +45,21 @@ export namespace InventoryEvents {
 			itemId: Sedes.ToString(),
 			gridId: Sedes.ToString(),
 		}),
+
+		addItem: new Sedes.Serializer({
+			item: itemSerializer,
+			gridId: Sedes.ToString(),
+		}),
+
+		setItemQuantity: new Sedes.Serializer({
+			itemId: Sedes.ToString(),
+			quantity: Sedes.ToUnsigned(64),
+		}),
 	};
-	export const events = {};
+	export const events = {
+		addItem: Red.Event("addItem", serializers.addItem),
+		setItemQuantity: Red.Event("setItemQuantity", serializers.setItemQuantity),
+	};
 
 	export const functions = {
 		fetchInventory: Red.Function("fetchGrid", serializers.fetchInventoryIn, serializers.fetchInventoryOut),

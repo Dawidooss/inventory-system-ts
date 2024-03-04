@@ -6,6 +6,7 @@ import { Object } from "shared/utils/Object";
 import Tools from "./Tools";
 import { InventoryMap } from "shared/types/inventory";
 import Router from "./ui/components/complex/Router";
+import { findItem } from "shared/utils/inventory/findItem";
 
 const playerGui = Players.LocalPlayer.WaitForChild("PlayerGui") as PlayerGui;
 
@@ -32,5 +33,18 @@ InventoryEvents.functions.fetchInventory
 			clientState.setInventory(tostring(player.UserId), inventoryMap);
 		}
 	});
+
+InventoryEvents.events.addItem.Client().On((data) => {
+	clientState.addItem(data.gridId, data.item);
+});
+
+InventoryEvents.events.setItemQuantity.Client().On((data) => {
+	const [item] = findItem(clientState.getState().inventoryProducer.grids, data.itemId);
+	if (!item) {
+		// TODO: refresh adata
+		return;
+	}
+	clientState.setItemQuantity(item, data.quantity);
+});
 
 new Tools();

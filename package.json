@@ -26,6 +26,7 @@
 		"@rbxts/bitbuffer": "^1.1.1-ts.1",
 		"@rbxts/maid": "^1.1.0",
 		"@rbxts/pretty-react-hooks": "^0.4.1",
+		"@rbxts/promise-character": "^1.0.3",
 		"@rbxts/raycast-hitbox": "^4.0.1-ts.0",
 		"@rbxts/react": "^0.3.1",
 		"@rbxts/react-reflex": "^0.3.3",

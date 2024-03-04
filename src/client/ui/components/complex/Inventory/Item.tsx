@@ -2,11 +2,11 @@ import { Instant, Linear, toBinding, useMotor, useMouse } from "@rbxts/pretty-re
 import React, { Binding, useEffect, useRef, useState } from "@rbxts/react";
 import { useSelector } from "@rbxts/react-reflex";
 import { GuiService } from "@rbxts/services";
-import getItemConfig from "shared/inventory/getItemConfig";
-import clientState, { RootState } from "client/reflex/clientState";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
 import { Item } from "shared/types/inventory";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import Text from "../../basic/Text";
+import clientState, { RootState } from "client/reflex/clientState";
 
 type Props = {
 	Data: Item;
@@ -79,25 +79,16 @@ export default function Item(props: Props) {
 
 	return (
 		<frame
-			Size={UDim2.fromOffset(
-				cellSize * (props.Data.rotated ? config.height : config.width),
-				cellSize * (props.Data.rotated ? config.width : config.height),
-			)}
+			Size={UDim2.fromOffset(cellSize * config.width, cellSize * config.height)}
 			BackgroundTransparency={1}
 			Position={position}
 			AnchorPoint={anchorPoint}
 		>
 			<imagebutton
-				Size={
-					props.Data.rotated
-						? UDim2.fromScale(config.width / config.height, config.height / config.width)
-						: UDim2.fromScale(1, 1)
-				}
-				Position={props.Data.rotated ? UDim2.fromScale(0.25, -0.5) : undefined}
+				Size={UDim2.fromScale(1, 1)}
 				Image={config.image}
 				BackgroundTransparency={1}
 				ScaleType={Enum.ScaleType.Fit}
-				Rotation={props.Data.rotated ? -90 : 0}
 				ImageTransparency={transparency.map((v) => {
 					if (props.Locked) {
 						if (v === 0) {

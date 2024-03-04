@@ -44,6 +44,6 @@ export default function ContextMenu(props: Props) {
 			))}
 		</imagelabel>
 	) : (
-		<Full />
+		<></>
 	);
 }

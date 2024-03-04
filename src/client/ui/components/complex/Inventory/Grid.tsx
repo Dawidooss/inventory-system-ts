@@ -26,36 +26,36 @@ export default function Grid(props: Props) {
 	const colorMap = gridConfig?.unified ? useUnifiedGrid(gridRef, props.Data) : useGrid(gridRef, props.Data);
 
 	return (
-		<Full>
-			<frame
-				Size={UDim2.fromOffset(gridConfig.width * cellSize, gridConfig.height * cellSize)}
+		<frame
+			Size={UDim2.fromOffset(gridConfig.width * cellSize, gridConfig.height * cellSize)}
+			AnchorPoint={new Vector2(0.5, 0.5)}
+			Position={props.Position}
+			BackgroundTransparency={1}
+			ref={gridRef}
+		>
+			<Text
+				Text={gridConfig.text || ""}
+				Size={UDim2.fromScale(0.8, 1)}
+				Position={UDim2.fromScale(0.5, 0.5)}
 				AnchorPoint={new Vector2(0.5, 0.5)}
-				Position={props.Position}
-				BackgroundTransparency={1}
-				ref={gridRef}
+				TextXAlignment={Enum.TextXAlignment.Center}
+				Color={Color3.fromRGB(25, 25, 25)}
+				Rotation={-math.deg(math.atan(gridConfig.height / gridConfig.width))}
 			>
-				<Text
-					Text={gridConfig.text || ""}
-					Size={UDim2.fromScale(0.8, 1)}
-					Position={UDim2.fromScale(0.5, 0.5)}
-					AnchorPoint={new Vector2(0.5, 0.5)}
-					TextXAlignment={Enum.TextXAlignment.Center}
-					Color={Color3.fromRGB(25, 25, 25)}
-					Rotation={-math.deg(math.atan(gridConfig.height / gridConfig.width))}
-				>
-					<uitextsizeconstraint MaxTextSize={40} />
-				</Text>
-				<Full>
-					<uigridlayout CellSize={new UDim2(0, cellSize, 0, cellSize)} CellPadding={new UDim2()} />
+				<uitextsizeconstraint MaxTextSize={40} />
+			</Text>
+			<Full>
+				<uigridlayout CellSize={new UDim2(0, cellSize, 0, cellSize)} CellPadding={new UDim2()} />
 
-					{table.create(gridConfig.width * gridConfig.height, 0).map((v, i) => {
-						const y = math.floor(i / gridConfig.width);
-						const x = i - y * gridConfig.width;
+				{table.create(gridConfig.width * gridConfig.height, 0).map((v, i) => {
+					const y = math.floor(i / gridConfig.width);
+					const x = i - y * gridConfig.width;
 
-						return <Cell key={v} Color={colorMap![x] && colorMap![x][y]} />;
-					})}
-				</Full>
-				{props.Data!.items.map((v) => (
+					return <Cell key={v} Color={colorMap![x] && colorMap![x][y]} />;
+				})}
+			</Full>
+			{props.Data!.items.map((v) =>
+				itemHolding !== v ? (
 					<Item
 						key={v.id}
 						GridId={props.Data.id}
@@ -63,8 +63,10 @@ export default function Grid(props: Props) {
 						Locked={v.id === itemHolding?.id || v.locked}
 						CenterOnGrid={gridConfig?.unified}
 					/>
-				))}
-			</frame>
-		</Full>
+				) : (
+					<></>
+				),
+			)}
+		</frame>
 	);
 }

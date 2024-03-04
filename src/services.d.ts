@@ -1,18 +1,15 @@
-type ItemConfig = {
-	name: string;
-	image: string;
-	description?: string;
+type ItemModel = Model & {
+	PrimaryPart: BasePart;
+};
 
-	width: number;
-	height: number;
-	max: number;
-	type?: string;
+type ItemPrefab = Model & {
+	config: ModuleScript;
+	model?: ItemModel;
 };
 
 interface ReplicatedFirst extends Instance {
 	items: Folder & {
-		[key: string]: Model & {
-			config: ModuleScript;
-		};
+		[key: string]: ItemPrefab;
 	};
+	pouch: ItemModel;
 }

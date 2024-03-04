@@ -1,5 +1,5 @@
 import getGridConfig from "./getGridConfig";
-import getItemConfig from "shared/inventory/getItemConfig";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
 import { Object } from "../Object";
 import { Grid, Item } from "shared/types/inventory";
 

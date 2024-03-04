@@ -1,5 +1,5 @@
 import { Item } from "shared/types/inventory";
-import getItemConfig from "../../inventory/getItemConfig";
+import getItemConfig from "./getItemConfig";
 
 export default function canMerge(item: Item, targetItem: Item) {
 	const itemConfig = getItemConfig(item);

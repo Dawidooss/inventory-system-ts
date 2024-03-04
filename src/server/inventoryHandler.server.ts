@@ -1,9 +1,15 @@
-import { HttpService, Players } from "@rbxts/services";
+import promiseR15 from "@rbxts/promise-character";
+import { Debris, HttpService, Players, ReplicatedFirst, Workspace } from "@rbxts/services";
 import { InventoryEvents } from "shared/events/inventory";
 import { Grid } from "shared/types/inventory";
 import check from "shared/utils/check";
 import canMerge from "shared/utils/inventory/canMerge";
+import findSpace from "shared/utils/inventory/findSpace";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
+import getItemModel from "shared/utils/inventory/getItemModel";
 import itemFits from "shared/utils/inventory/itemFits";
+import spreadBetweenItemsInGrid from "shared/utils/inventory/spreadBetweenItemsInGrid";
+import removeCollisionBetweenModels from "shared/utils/removeCollisionBetweenModels";
 
 const grids: { [gridId: string]: Grid } = {};
 const inventories: {
@@ -154,6 +160,73 @@ InventoryEvents.functions.mergeItems.SetCallback((player, req) => {
 	if (item.quantity <= 0) {
 		grid.items = grid.items.filter((v) => v !== item);
 	}
+
+	return {};
+});
+
+InventoryEvents.functions.dropItem.SetCallback(async (player, req) => {
+	check(player.Character, `player's ${player.UserId} character doesn't exist`);
+
+	const grid = grids[req.gridId];
+	check(grid, `gridId ${req.gridId} doesn't exist`);
+
+	const item = grid.items.find((v) => v.id === req.itemId);
+	check(item, `item ${req.itemId} in grid doesn't exist`);
+	check(item.locked === false, `item ${req.itemId} is locked`);
+
+	const itemConfig = getItemConfig(item);
+
+	const character = await promiseR15(player.Character);
+	const cframe = character.HumanoidRootPart.CFrame;
+
+	const drop = getItemModel(item)?.Clone() || ReplicatedFirst.pouch.Clone();
+	drop.PivotTo(cframe);
+	removeCollisionBetweenModels(drop, character, 2);
+	drop.Parent = Workspace;
+
+	const proximityPrompt = new Instance("ProximityPrompt");
+	proximityPrompt.Parent = drop.PrimaryPart;
+	proximityPrompt.HoldDuration = 0.7;
+	proximityPrompt.ActionText = `${itemConfig.name}` + (item.quantity > 1 ? ` ${item.quantity}x` : "");
+
+	proximityPrompt.Triggered.Connect((pickuper) => {
+		const pickuperInventory = inventories[tostring(pickuper.UserId)];
+		const pickuperBackpack = pickuperInventory.backpack;
+
+		const [hasSpace, pos] = findSpace(pickuperBackpack, item);
+		if (!hasSpace) return;
+
+		const [spreadAffectedItems, remainder] = spreadBetweenItemsInGrid(pickuperBackpack, item);
+
+		for (let [affectedItem, quantity] of spreadAffectedItems) {
+			affectedItem.quantity = quantity;
+			InventoryEvents.events.setItemQuantity.Server().Fire(pickuper, {
+				itemId: affectedItem.id,
+				quantity,
+			});
+		}
+
+		if (remainder > 0) {
+			item.x = pos[0];
+			item.y = pos[1];
+			item.quantity = remainder;
+			pickuperBackpack.items.push(item);
+			InventoryEvents.events.addItem.Server().Fire(pickuper, {
+				item,
+				gridId: pickuperBackpack.id,
+			});
+		}
+
+		pickuperBackpack.items.push(item);
+		InventoryEvents.events.addItem.Server().Fire(pickuper, {
+			item,
+			gridId: pickuperBackpack.id,
+		});
+		drop.Destroy();
+	});
+
+	// remove item from grid
+	grid.items = grid.items.filter((v) => v !== item);
 
 	return {};
 });

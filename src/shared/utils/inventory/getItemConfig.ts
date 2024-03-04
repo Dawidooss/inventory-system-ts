@@ -1,5 +1,5 @@
 import { ReplicatedFirst } from "@rbxts/services";
-import { Item } from "shared/types/inventory";
+import { Item, ItemConfig } from "shared/types/inventory";
 
 export default function getItemConfig(name: string | Item) {
 	if (typeOf(name) === "string") {

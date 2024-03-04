@@ -54,7 +54,7 @@ export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | u
 			}
 			// } else if (itemHolding && itemFits(grid, itemHolding, [0, 0], true)) {
 			// color = Color3.fromRGB(3, 255, 120);
-		} else if (grid.items[0]) {
+		} else if (grid.items[0] && grid.items[0] !== itemHolding) {
 			color = Color3.fromRGB(255, 175, 78);
 		}
 

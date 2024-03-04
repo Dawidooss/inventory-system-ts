@@ -1,4 +1,4 @@
-import getItemConfig from "../../inventory/getItemConfig";
+import getItemConfig from "./getItemConfig";
 import { Object } from "../Object";
 import isRectInRect from "../isRectTouchingRect";
 import { config } from "@rbxts/ripple";
@@ -23,8 +23,8 @@ function isSpaceAvailable(grid: Grid, position: [number, number], size: [number,
 }
 
 export default function findSpace(grid: Grid, item: Item): [true, [number, number]] | [false] {
-	const itemConfig: ItemConfig = getItemConfig(item);
-	const gridConfig: GridConfig = getGridConfig(grid);
+	const itemConfig = getItemConfig(item);
+	const gridConfig = getGridConfig(grid);
 
 	for (let y = 0; y < gridConfig.height; y++) {
 		for (let x = 0; x < gridConfig.width; x++) {

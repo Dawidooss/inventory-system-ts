@@ -3,7 +3,7 @@ import Text from "../../basic/Text";
 import Button from "../../basic/Button";
 import { useSelector } from "@rbxts/react-reflex";
 import clientState, { RootState } from "client/reflex/clientState";
-import getItemConfig from "shared/inventory/getItemConfig";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
 import Full from "../../basic/Full";
 import { SliderConfig } from "shared/utils/Slider";
 import useSlider from "client/ui/hooks/useSlider";
@@ -146,6 +146,6 @@ export default function SplitMenu(props: Props) {
 			/>
 		</imagelabel>
 	) : (
-		<Full />
+		<></>
 	);
 }
