@@ -55,7 +55,7 @@ export default function Grid(props: Props) {
 				})}
 			</Full>
 			{props.Data!.items.map((v) =>
-				itemHolding !== v ? (
+				itemHolding !== v && !v.mockup ? (
 					<Item
 						key={v.id}
 						GridId={props.Data.id}

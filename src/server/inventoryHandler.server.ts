@@ -216,12 +216,6 @@ InventoryEvents.functions.dropItem.SetCallback(async (player, req) => {
 				gridId: pickuperBackpack.id,
 			});
 		}
-
-		pickuperBackpack.items.push(item);
-		InventoryEvents.events.addItem.Server().Fire(pickuper, {
-			item,
-			gridId: pickuperBackpack.id,
-		});
 		drop.Destroy();
 	});
 

@@ -2,11 +2,11 @@ import { ContextMenuOptions, Item } from "shared/types/inventory";
 import clientState from "./reflex/clientState";
 import { GuiService, HttpService, Players, RunService, UserInputService } from "@rbxts/services";
 import { findItem } from "shared/utils/inventory/findItem";
-import getItemConfig from "shared/utils/inventory/getItemConfig";
 import { InventoryEvents } from "shared/events/inventory";
 import getGridConfig from "shared/utils/inventory/getGridConfig";
 import findSpace from "shared/utils/inventory/findSpace";
 import getCompatibleUnifiedGrids from "shared/utils/inventory/getCompatibleUnifiedGrids";
+import getItemConfig from "shared/utils/inventory/getItemConfig";
 
 const guiInset = GuiService.GetGuiInset()[0];
 
@@ -78,7 +78,9 @@ export namespace InventoryActions {
 			return;
 		}
 
-		quantity = math.clamp(config.max - targetItem.quantity, 0, item.quantity);
+		print(quantity);
+		quantity = math.clamp(config.max - targetItem.quantity, 0, quantity);
+		print(quantity);
 
 		const success = () => {
 			clientState.mergeItems(item, targetItem, quantity);
