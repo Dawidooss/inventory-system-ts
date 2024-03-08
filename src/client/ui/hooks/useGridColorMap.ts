@@ -10,8 +10,8 @@ import getGridConfig from "shared/utils/inventory/getGridConfig";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import itemFits from "shared/utils/inventory/itemFits";
 
-export default function useGrid(gridRef: React.MutableRefObject<Frame | undefined>, grid: Grid) {
-	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
+export default function useGridColorMap(grid: Grid) {
+	// const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const splitKeyDown = useSelector((state: RootState) => !!state.inventoryProducer.splitKeyDown);
 
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
@@ -24,33 +24,29 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 	const config = getGridConfig(grid);
 	let colorMap: ColorMap | undefined;
 
-	// update which cell is hovering
-	const updateHoveringCell = () => {
-		if (!gridRef.current) return;
+	// 	const mouseLocation = UserInputService.GetMouseLocation().sub(GuiService.GetGuiInset()[0]);
 
-		const mouseLocation = UserInputService.GetMouseLocation().sub(GuiService.GetGuiInset()[0]);
+	// 	// if mouse is inside cell
+	// 	if (isPointInRect(mouseLocation, gridRef.current.AbsolutePosition, gridRef.current.AbsoluteSize)) {
+	// 		// calculate cell
+	// 		const gridRelated = mouseLocation.sub(gridRef.current.AbsolutePosition);
+	// 		let [x, y] = [math.floor(gridRelated.X / cellSize), math.floor(gridRelated.Y / cellSize)];
 
-		// if mouse is inside cell
-		if (isPointInRect(mouseLocation, gridRef.current.AbsolutePosition, gridRef.current.AbsoluteSize)) {
-			// calculate cell
-			const gridRelated = mouseLocation.sub(gridRef.current.AbsolutePosition);
-			let [x, y] = [math.floor(gridRelated.X / cellSize), math.floor(gridRelated.Y / cellSize)];
-
-			// only set cell which is inside grid bounds [0, width-1], [0, height-1]
-			if (x >= 0 && y >= 0 && x < config.width && y < config.height) {
-				if (!(gridHoveringId === grid.id && cellHovering?.[0] === x && cellHovering?.[1] === y)) {
-					clientState.setCellHovering(grid.id, [x, y]);
-					cellHovering = [x, y]; // we also have to update state in current render
-				}
-				return;
-			}
-		}
-		// no longer hovering any cell
-		if (gridHoveringId === grid.id && cellHovering) {
-			clientState.setCellHovering();
-			cellHovering = undefined; // we also have to update state in current render
-		}
-	};
+	// 		// only set cell which is inside grid bounds [0, width-1], [0, height-1]
+	// 		if (x >= 0 && y >= 0 && x < config.width && y < config.height) {
+	// 			if (!(gridHoveringId === grid.id && cellHovering?.[0] === x && cellHovering?.[1] === y)) {
+	// 				clientState.setCellHovering(grid.id, [x, y]);
+	// 				cellHovering = [x, y]; // we also have to update state in current render
+	// 			}
+	// 			return;
+	// 		}
+	// 	}
+	// 	// no longer hovering any cell
+	// 	if (gridHoveringId === grid.id && cellHovering) {
+	// 		clientState.setCellHovering();
+	// 		cellHovering = undefined; // we also have to update state in current render
+	// 	}
+	// };
 
 	// fill colorMap with data
 	if (grid && config) {
@@ -105,10 +101,6 @@ export default function useGrid(gridRef: React.MutableRefObject<Frame | undefine
 			}
 		}
 	}
-
-	useMouse(() => {
-		updateHoveringCell();
-	});
 
 	return colorMap;
 }

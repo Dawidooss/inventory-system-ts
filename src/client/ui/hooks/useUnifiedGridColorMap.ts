@@ -8,7 +8,7 @@ import getGridConfig from "shared/utils/inventory/getGridConfig";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import itemFits from "shared/utils/inventory/itemFits";
 
-export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | undefined>, grid: Grid) {
+export default function useUnifiedGrid(grid: Grid) {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 
 	const itemsHovering = useSelector((state: RootState) => state.inventoryProducer.itemsHovering);
@@ -16,24 +16,6 @@ export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | u
 	let cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
 
 	const config = getGridConfig(grid);
-
-	// update which cell is hovering
-	const updateHoveringCell = () => {
-		if (!gridRef.current) return;
-
-		const mouseLocation = UserInputService.GetMouseLocation().sub(GuiService.GetGuiInset()[0]);
-
-		// if mouse is inside cell
-		if (isPointInRect(mouseLocation, gridRef.current.AbsolutePosition, gridRef.current.AbsoluteSize)) {
-			clientState.setCellHovering(grid.id, [0, 0]);
-			return;
-		}
-		// no longer hovering any cell
-		if (gridHoveringId === grid.id && cellHovering) {
-			clientState.setCellHovering();
-			cellHovering = undefined; // we also have to update state in current render
-		}
-	};
 
 	// fill colorMap with data
 	let colorMap: ColorMap | undefined;
@@ -66,10 +48,6 @@ export default function useUnifiedGrid(gridRef: React.MutableRefObject<Frame | u
 			}
 		}
 	}
-
-	useMouse(() => {
-		updateHoveringCell();
-	});
 
 	return colorMap;
 }
