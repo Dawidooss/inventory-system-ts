@@ -78,9 +78,7 @@ export namespace InventoryActions {
 			return;
 		}
 
-		print(quantity);
 		quantity = math.clamp(config.max - targetItem.quantity, 0, quantity);
-		print(quantity);
 
 		const success = () => {
 			clientState.mergeItems(item, targetItem, quantity);

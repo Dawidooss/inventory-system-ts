@@ -22,9 +22,9 @@ export interface InventoryProducer {
 	itemHoldingOffset: [number, number];
 	itemHoldingCellOffset: [number, number];
 
-	gridHoveringId?: string;
-	cellHovering?: [number, number];
-	itemsHovering: Item[];
+	cellHovering?: [x: number, y: number];
+	targetGrid?: Grid;
+	targetItem?: Item;
 
 	itemsEquipped: {
 		[inventoryId: string]: {
@@ -41,7 +41,6 @@ const initialState: InventoryProducer = {
 	cellSize: math.floor(camera.ViewportSize.Y * (50 / 1080)),
 	itemHoldingOffset: [0, 0],
 	itemHoldingCellOffset: [0, 0],
-	itemsHovering: [],
 	itemsEquipped: {},
 };
 
@@ -78,20 +77,23 @@ const inventoryProducer = createProducer(initialState, {
 
 	setCellHovering: (
 		state: InventoryProducer,
-		gridHoveringId?: InventoryProducer["gridHoveringId"],
+		targetGrid?: InventoryProducer["targetGrid"],
 		cellHovering?: InventoryProducer["cellHovering"],
 	) => ({
 		...state,
-		gridHoveringId,
+		targetGrid,
 		cellHovering,
 	}),
 
-	setItemHovering: (state: InventoryProducer, item: Item, hovering: boolean) => {
-		state.itemsHovering = state.itemsHovering.filter((v) => v !== item);
-		if (hovering === true) {
-			state.itemsHovering.push(item);
+	setTargetItem: (state: InventoryProducer, item: Item, hovering: boolean) => {
+		if (state.targetItem === item) {
+			if (!hovering) {
+				delete state.targetItem;
+			}
+		} else if (hovering) {
+			state.targetItem = item;
 		}
-		return { ...state, hoveringItemsIds: [...state.itemsHovering] };
+		return { ...state };
 	},
 
 	addItem: (state: InventoryProducer, gridId: string, item: Item) => {

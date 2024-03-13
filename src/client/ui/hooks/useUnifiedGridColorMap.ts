@@ -8,23 +8,19 @@ import getGridConfig from "shared/utils/inventory/getGridConfig";
 import isPointInRect from "shared/utils/inventory/isPointInRect";
 import itemFits from "shared/utils/inventory/itemFits";
 
-export default function useUnifiedGrid(grid: Grid) {
+export default function useUnifiedGrid(grid: Grid, cellHovering?: [x: number, y: number]) {
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
-
-	const itemsHovering = useSelector((state: RootState) => state.inventoryProducer.itemsHovering);
-	const gridHoveringId = useSelector((state: RootState) => state.inventoryProducer.gridHoveringId);
-	let cellHovering = useSelector((state: RootState) => state.inventoryProducer.cellHovering);
+	const targetItem = useSelector((state: RootState) => state.inventoryProducer.targetItem);
+	const targetGrid = useSelector((state: RootState) => state.inventoryProducer.targetGrid);
 
 	const config = getGridConfig(grid);
 
-	// fill colorMap with data
+	// // fill colorMap with data
 	let colorMap: ColorMap | undefined;
 	if (grid && config) {
 		let color: Color3 | undefined;
 		// handle itemHolding [moving, merging, splitting etc.]
-		if (itemHolding && cellHovering && gridHoveringId === grid.id) {
-			const targetItem = itemsHovering.filter((v) => v !== itemHolding)[0];
-
+		if (itemHolding && cellHovering && targetGrid === grid) {
 			if (targetItem) {
 				// merge case
 				const _canMerge = canMerge(itemHolding, targetItem);

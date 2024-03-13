@@ -11,6 +11,7 @@ import useUnifiedGridColorMap from "client/ui/hooks/useUnifiedGridColorMap";
 import useGridColorMap from "client/ui/hooks/useGridColorMap";
 import { Root } from "@rbxts/react-roblox";
 import { UserInputService } from "@rbxts/services";
+import useCellsHovering from "client/ui/hooks/useCellsHovering";
 
 type Props = {
 	Position: UDim2;
@@ -22,17 +23,13 @@ export default function Grid(props: Props) {
 	const cellSize = useSelector((state: RootState) => state.inventoryProducer.cellSize);
 	const itemHolding = useSelector((state: RootState) => state.inventoryProducer.itemHolding);
 
-	const gridConfig = props.Data && getGridConfig(props.Data);
+	const gridConfig = getGridConfig(props.Data);
 
-	const colorMap = gridConfig?.unified ? useUnifiedGridColorMap(props.Data) : useGridColorMap(props.Data);
-
-	const setCellHovering = (x?: number, y?: number) => {
-		if (x && y) {
-			clientState.setCellHovering(props.Data.id, gridConfig.unified ? [0, 0] : [x, y]);
-		} else {
-			clientState.setCellHovering();
-		}
-	};
+	const gridRef = useRef();
+	const cellHovering = useCellsHovering(props.Data, gridRef);
+	const colorMap = gridConfig.unified
+		? useUnifiedGridColorMap(props.Data, cellHovering)
+		: useGridColorMap(props.Data, cellHovering);
 
 	return (
 		<frame
@@ -40,6 +37,7 @@ export default function Grid(props: Props) {
 			AnchorPoint={new Vector2(0.5, 0.5)}
 			Position={props.Position}
 			BackgroundTransparency={1}
+			ref={gridRef}
 		>
 			<Text
 				Text={gridConfig.text || ""}
@@ -59,22 +57,7 @@ export default function Grid(props: Props) {
 					const y = math.floor(i / gridConfig.width);
 					const x = i - y * gridConfig.width;
 
-					return (
-						<Cell
-							key={v}
-							Color={colorMap![x] && colorMap![x][y]}
-							setCellHovering={(hoverState) => {
-								const state = clientState.getState().inventoryProducer;
-								if (hoverState) setCellHovering(x, y);
-								else if (
-									state.cellHovering?.[0] === x &&
-									state.cellHovering?.[1] === y &&
-									state.gridHoveringId === props.Data.id
-								)
-									setCellHovering();
-							}}
-						/>
-					);
+					return <Cell key={v} Color={colorMap![x] && colorMap![x][y]} />;
 				})}
 			</Full>
 			{props.Data!.items.map((v) =>

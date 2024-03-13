@@ -45,27 +45,6 @@ export default function Item(props: Props) {
 		};
 	}, [hoverTick]);
 
-	// detect if is hovering and update itemsHovering state
-	useEffect(() => {
-		const state = clientState.getState().inventoryProducer;
-		if (!(props.Locked || state.itemHolding?.id === props.Data.id) && cellHovering) {
-			if (
-				isPointInRect(
-					new Vector2(cellHovering[0], cellHovering[1]),
-					new Vector2(props.Data.x, props.Data.y),
-					new Vector2(config.width - 1, config.height - 1),
-				) &&
-				props.GridId === state.gridHoveringId
-			) {
-				if (!state.itemsHovering.find((v) => v === props.Data)) clientState.setItemHovering(props.Data, true);
-				return;
-			}
-		}
-		if (state.itemsHovering.find((v) => v === props.Data)) {
-			clientState.setItemHovering(props.Data, false);
-		}
-	}, [cellHovering, itemHolding]);
-
 	let position: Binding<UDim2>;
 	let anchorPoint: Vector2 | undefined;
 	if (props.Holding) {
@@ -108,15 +87,19 @@ export default function Item(props: Props) {
 						clientState.setContextData();
 						const offset = rbx.AbsolutePosition.sub(mouse.getValue()).add(GuiService.GetGuiInset()[0]);
 
+						print(offset.X, offset.Y);
+
 						clientState.holdItem(props.Data, [offset.X, offset.Y]);
-						clientState.setItemHovering(props.Data, false);
+						clientState.setTargetItem(props.Data, false);
 					},
 					MouseEnter: () => {
 						if (props.Locked) return;
 						setHoverTick(tick());
+						if (!props.Holding) clientState.setTargetItem(props.Data, true);
 					},
 					MouseLeave: () => {
 						setHoverTick(-1);
+						clientState.setTargetItem(props.Data, false);
 					},
 				}}
 				ref={imageRef}

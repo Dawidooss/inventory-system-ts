@@ -24,52 +24,45 @@ export default function useInventoryInput() {
 
 	useEffect(() => {
 		const maid = new Maid();
-
 		maid.GiveTask(
 			UserInputService.InputEnded.Connect((input) => {
 				const state = clientState.getState().inventoryProducer;
+
 				if (input.UserInputType === Enum.UserInputType.MouseButton1) {
 					clientState.setContextData();
 
-					if (state.cellHovering && state.gridHoveringId && state.itemHolding) {
-						const targetItem: Item | undefined = state.itemsHovering.filter(
-							(v) => v !== state.itemHolding,
-						)[0];
-						const [, targetItemGridId] = targetItem ? findItem(state.grids, targetItem.id) : [];
-						const gridHoveringConfig =
-							state.gridHoveringId && getGridConfig(state.grids[state.gridHoveringId]);
+					if (state.cellHovering && state.targetGrid && state.itemHolding) {
+						const [, targetItemGridId] = state.targetItem
+							? findItem(state.grids, state.itemHolding.id)
+							: [];
+						const targetGridConfig = state.targetGrid && getGridConfig(state.targetGrid);
 
-						let targetCell = state.cellHovering;
-						if (gridHoveringConfig && !gridHoveringConfig.unified) {
-							targetCell = [
-								targetCell[0] - state.itemHoldingCellOffset[0],
-								targetCell[1] - state.itemHoldingCellOffset[1],
+						let cellHovering = state.cellHovering;
+						if (targetGridConfig && !targetGridConfig.unified) {
+							print("hi");
+							cellHovering = [
+								cellHovering[0] - state.itemHoldingCellOffset[0],
+								cellHovering[1] - state.itemHoldingCellOffset[1],
 							];
 						}
 
-						if (targetItem && targetItemGridId && canMerge(state.itemHolding, targetItem)) {
-							InventoryActions.merge(state.itemHolding, targetItem);
-						} else if (
-							itemFits(
-								state.grids[state.gridHoveringId],
-								state.itemHolding,
-								targetCell,
-								!state.splitKeyDown,
-							)
-						) {
-							InventoryActions.move(state.itemHolding, state.gridHoveringId, targetCell);
+						print(state.targetGrid, state.itemHolding, cellHovering, state.itemHoldingCellOffset);
+
+						if (state.targetItem && targetItemGridId && canMerge(state.itemHolding, state.targetItem)) {
+							InventoryActions.merge(state.itemHolding, state.targetItem);
+						} else if (itemFits(state.targetGrid, state.itemHolding, cellHovering, !state.splitKeyDown)) {
+							InventoryActions.move(state.itemHolding, state.targetGrid.id, cellHovering);
 						}
 					}
 
 					clientState.holdItem();
 				} else if (input.UserInputType === Enum.UserInputType.MouseButton2) {
-					const targetItem: Item | undefined = state.itemsHovering.filter((v) => v !== state.itemHolding)[0];
-					if (state.cellHovering && targetItem && !state.itemHolding && !state.splitData) {
+					if (state.cellHovering && state.targetItem && !state.itemHolding && !state.splitData) {
 						clientState.setContextData([
 							input.Position.X,
 							input.Position.Y,
-							targetItem,
-							InventoryActions.getContextMenuOptionsForItem(targetItem),
+							state.targetItem,
+							InventoryActions.getContextMenuOptionsForItem(state.targetItem),
 						]);
 					}
 				}
