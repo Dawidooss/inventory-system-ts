@@ -14,27 +14,33 @@ export default class Loader extends Tanker {
 
 		this.maid.GiveTask(
 			getTagged(this.model, "reload", (prompt: PromptInstance) => {
-				PromptService.On(prompt).Connect(async () => {
-					if (this.ammoGrabbed) this.Reload();
-					else this.Unload();
-				});
+				this.maid.GiveTask(
+					PromptService.On(prompt).Connect(async () => {
+						if (this.ammoGrabbed) this.Reload();
+						else this.Unload();
+					}),
+				);
 			}),
 		);
 
 		this.maid.GiveTask(
 			getTagged(this.model, "ammoSource", (prompt: PromptInstance) => {
-				PromptService.On(prompt).Connect(async () => {
-					if (!this.ammoGrabbed) this.GrabAmmo(prompt);
-					else this.PlaceDownAmmo();
-				});
+				this.maid.GiveTask(
+					PromptService.On(prompt).Connect(async () => {
+						if (!this.ammoGrabbed) this.GrabAmmo(prompt);
+						else this.PlaceDownAmmo();
+					}),
+				);
 			}),
 		);
 
 		this.maid.GiveTask(
 			getTagged(this.model, "gunHatchLever", (prompt: PromptInstance) => {
-				PromptService.On(prompt).Connect(async () => {
-					this.GunHatchLever();
-				});
+				this.maid.GiveTask(
+					PromptService.On(prompt).Connect(async () => {
+						this.GunHatchLever();
+					}),
+				);
 			}),
 		);
 	}
@@ -47,7 +53,7 @@ export default class Loader extends Tanker {
 
 		this.animations.idle.Stop(0.25);
 
-		const track = this.gun?.opened.Value ? this.animations.gunLeverDown : this.animations.gunLeverUp;
+		const track = this.gun?.breach.opened.Value ? this.animations.gunLeverDown : this.animations.gunLeverUp;
 		track.Play(0.25, 2);
 		track.GetMarkerReachedSignal("pull").Wait();
 
@@ -103,7 +109,7 @@ export default class Loader extends Tanker {
 	}
 
 	public async Unload() {
-		if (!this.gun?.opened.Value) return;
+		if (!this.gun?.breach.opened.Value) return;
 		if (this.ammoGrabbed) return;
 		if (!this.gun?.FindFirstChild("ammo")) return;
 		this.debounce = true;
@@ -127,7 +133,7 @@ export default class Loader extends Tanker {
 
 	public async Reload() {
 		if (!this.ammoGrabbed) return;
-		if (!this.gun?.opened.Value) return;
+		if (!this.gun?.breach.opened.Value) return;
 		if (this.gun?.FindFirstChild("ammo")) return;
 
 		this.debounce = true;

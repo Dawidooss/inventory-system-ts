@@ -1,5 +1,6 @@
 import BezierCurve from "@rbxts/bezier";
 import Maid from "@rbxts/maid";
+import { lerp } from "@rbxts/pretty-react-hooks";
 import promiseR15 from "@rbxts/promise-character";
 import { Players, RunService, UserInputService, Workspace } from "@rbxts/services";
 import PromptService, { PromptInstance } from "client/PromptService";
@@ -22,6 +23,8 @@ export default abstract class Tanker {
 	public cameraMovement = 0.5;
 	public cameraMoveDirection?: string;
 	public periscope?: TankPeriscope;
+	public zoom = false;
+	private enteringTank = true;
 
 	public cameraRotationX = 0;
 	public cameraRotationY = 0;
@@ -34,15 +37,11 @@ export default abstract class Tanker {
 
 		this.maid.GiveTask(
 			getTagged(this.model, "periscope", (prompt: PromptInstance & TankPeriscope) => {
-				PromptService.On(prompt).Connect(async () => {
-					this.Periscope(prompt);
-				});
-			}),
-		);
-
-		this.maid.GiveTask(
-			getTagged(this.model, "mg", (prompt: PromptInstance) => {
-				PromptService.On(prompt).Connect(async () => {});
+				this.maid.GiveTask(
+					PromptService.On(prompt).Connect(async () => {
+						this.Periscope(prompt);
+					}),
+				);
 			}),
 		);
 
@@ -73,6 +72,7 @@ export default abstract class Tanker {
 				if (processed) return;
 				if (input.KeyCode === Enum.KeyCode.A) this.cameraMoveDirection = "left";
 				else if (input.KeyCode === Enum.KeyCode.D) this.cameraMoveDirection = "right";
+				else if (input.KeyCode === Enum.KeyCode.Z && this.periscope) this.zoom = !this.zoom;
 			}),
 		);
 
@@ -105,12 +105,14 @@ export default abstract class Tanker {
 				this.animations[anim.Name] = character.Humanoid.Animator.LoadAnimation(anim);
 			}
 		}
+
 		clientState.setFade(1);
 		wait(0.5);
 		Net.events.enterTank.Client().Fire({
 			tankId: this.model.Name,
 			role: this.roleName,
 		});
+		this.enteringTank = false;
 
 		character.Humanoid.SetStateEnabled(Enum.HumanoidStateType.Freefall, false);
 		this.animations.idle.Play();
@@ -118,8 +120,8 @@ export default abstract class Tanker {
 
 	public async Periscope(periscope?: TankPeriscope) {
 		if (this.debounce) return;
-
 		this.debounce = true;
+		this.zoom = false;
 		if (periscope) {
 			if (this.animations.periscope) {
 				this.animations.idle.Stop(0.5);
@@ -143,7 +145,7 @@ export default abstract class Tanker {
 				this.animations.periscope.Stop(0.5);
 				this.animations.idle.Play(0.5);
 			}
-			delete this.periscope;
+			this.periscope = undefined;
 			wait(1);
 			this.debounce = false;
 		}
@@ -163,7 +165,14 @@ export default abstract class Tanker {
 		return true;
 	}
 
+	protected async UpdateCameraRotation(x: number, y: number) {
+		this.cameraRotationX += x;
+		this.cameraRotationY += y;
+		this.cameraRotationY = math.clamp(this.cameraRotationY, -math.pi / 2, math.pi / 2);
+	}
+
 	public async Update() {
+		if (this.enteringTank) return;
 		if (this.cameraMoveDirection === "left") this.cameraMovement -= 0.02;
 		if (this.cameraMoveDirection === "right") this.cameraMovement += 0.02;
 		this.cameraMovement = math.clamp(this.cameraMovement, 0, 1);
@@ -176,9 +185,12 @@ export default abstract class Tanker {
 		const mouseDelta = UserInputService.GetMouseDelta();
 		const MouseDeltaSensitivity = UserInputService.MouseDeltaSensitivity;
 
-		this.cameraRotationX += (mouseDelta.X / 150) * MouseDeltaSensitivity;
-		this.cameraRotationY += (mouseDelta.Y / 150) * MouseDeltaSensitivity;
-		this.cameraRotationY = math.clamp(this.cameraRotationY, -math.pi / 2, math.pi / 2);
+		rmbHold
+			? this.UpdateCameraRotation(
+					(mouseDelta.X / 150) * MouseDeltaSensitivity,
+					(mouseDelta.Y / 150) * MouseDeltaSensitivity,
+				)
+			: this.UpdateCameraRotation(0, 0);
 
 		const cameraPart = this.model.FindFirstChild(`${this.roleName} Camera`, true) as BasePart & {
 			left: Attachment;
@@ -203,7 +215,15 @@ export default abstract class Tanker {
 			let orientation = CFrame.fromOrientation(yOrientation, xOrientation, 0);
 
 			cframe = new CFrame(scope.WorldCFrame.Position).mul(orientation);
-			camera.FieldOfView = (scope.GetAttribute("fov") as number) || 70;
+			camera.FieldOfView = lerp(
+				camera.FieldOfView,
+				this.zoom && scope.GetAttribute("zoom")
+					? (scope.GetAttribute("zoom") as number)
+					: scope.GetAttribute("fov")
+						? (scope.GetAttribute("fov") as number)
+						: 70,
+				0.2,
+			);
 		} else {
 			const curve = new BezierCurve([
 				cameraPart.left.WorldPosition,

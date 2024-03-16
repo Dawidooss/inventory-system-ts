@@ -9,8 +9,8 @@ import Vignette from "./Vignette";
 export default function Router() {
 	return (
 		<ReflexProvider producer={clientState}>
-			<Prompts />
 			<Fade />
+			<Prompts />
 			<BackButton />
 			<Vignette />
 		</ReflexProvider>

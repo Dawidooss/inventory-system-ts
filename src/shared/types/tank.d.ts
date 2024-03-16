@@ -4,7 +4,15 @@ export type TankModel = Model & {
 };
 
 export type TankTurret = Model & {
-	Model: Model;
+	model: Model;
+	gun: TankGun;
+};
+
+export type TankScope = Model & {
+	main: BasePart & {
+		Motor6D: Motor6D;
+	};
+	reticle: BasePart;
 };
 
 export type TankSeat = BasePart & {
@@ -13,10 +21,22 @@ export type TankSeat = BasePart & {
 export type TankExit = BasePart & {
 	exit: Attachment;
 };
+
+export type Projectile = BasePart & {
+	Trail?: Trail;
+};
+
 export type TankGun = Model & {
-	opened: BoolValue;
-	main: BasePart & {
-		shellCFrame: Attachment;
+	model: Model;
+	breach: Model & {
+		opened: BoolValue;
+		main: BasePart & {
+			shellCFrame: Attachment;
+			firePoint: Attachment;
+		};
+		projectiles: Model & {
+			[ammoType: string]: Projectile;
+		};
 	};
 };
 export type TankPeriscope = BasePart & {

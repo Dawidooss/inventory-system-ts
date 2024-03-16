@@ -61,7 +61,15 @@ Net.events.tankRotation.Server().On((player, data) => {
 	const tank = tanks.find((v) => v.id === data.tankId);
 	check(tank, `No tank with id${data.tankId}`);
 
-	tank.SetRotation(data.turretRotation / 5, data.gunRotation / 5);
+	tank.SetRotation(data.turretRotation / 20, data.gunRotation / 20);
+	return {};
+});
+
+Net.events.fireTank.Server().On((player, data) => {
+	const tank = tanks.find((v) => v.id === data.tankId);
+	check(tank, `No tank with id${data.tankId}`);
+
+	tank.Fire();
 	return {};
 });
 

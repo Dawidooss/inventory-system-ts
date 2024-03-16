@@ -23,7 +23,7 @@ export default function Fade() {
 
 	return (
 		<frame
-			ZIndex={math.huge}
+			ZIndex={10000}
 			Size={UDim2.fromScale(2, 2)}
 			AnchorPoint={new Vector2(0.5, 0.5)}
 			Position={UDim2.fromScale(0.5, 0.5)}

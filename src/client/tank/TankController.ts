@@ -22,6 +22,8 @@ export default class TankHandler {
 				while (tankModel.Parent !== Workspace) {
 					tankModel = tankModel.Parent as TankModel;
 				}
+
+				prompt.FindFirstChildOfClass("Sound")?.Play();
 				this.Enter(tankModel, prompt.GetAttribute("role") as string);
 			});
 		});
@@ -34,6 +36,7 @@ export default class TankHandler {
 				},
 			) => {
 				PromptService.On(prompt).Connect(async () => {
+					prompt.FindFirstChildOfClass("Sound")?.Play();
 					this.Exit();
 				});
 			},

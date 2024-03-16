@@ -9,12 +9,13 @@ export namespace Net {
 		placeDownAmmo: Red.Event("placeDownAmmo", new Sedes.Serializer({ tankId: Sedes.ToString() })),
 		reload: Red.Event("reload", new Sedes.Serializer({ tankId: Sedes.ToString() })),
 		exitTank: Red.Event("exitTank", new Sedes.Serializer({ tankId: Sedes.ToString() })),
+		fireTank: Red.Event("fireTank", new Sedes.Serializer({ tankId: Sedes.ToString() })),
 		tankRotation: Red.Event(
 			"tankRotation",
 			new Sedes.Serializer({
 				tankId: Sedes.ToString(),
-				gunRotation: Sedes.ToSigned(13),
-				turretRotation: Sedes.ToSigned(13),
+				gunRotation: Sedes.ToSigned(20),
+				turretRotation: Sedes.ToSigned(20),
 			}),
 		),
 	};
