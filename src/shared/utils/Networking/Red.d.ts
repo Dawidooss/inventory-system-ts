@@ -16,7 +16,7 @@ export interface ClientEvent<T> {
 
 export interface Future<R> {
 	After(callback: (success: boolean, data: R) => void): void;
-	// Await(): [boolean, R];
+	Await(): [boolean, R];
 }
 
 export interface RedFunction<T extends { [key: string]: any }, R extends { [key: string]: any }> {

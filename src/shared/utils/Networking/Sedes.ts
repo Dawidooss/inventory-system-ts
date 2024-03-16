@@ -83,6 +83,18 @@ export namespace Sedes {
 		};
 	};
 
+	export const ToFloat = (exponent: number, mantisa: number): Method<number> => {
+		return {
+			Des: (buffer) => {
+				return buffer.readFloat(exponent, mantisa);
+			},
+			Ser: (data, buffer) => {
+				buffer.writeFloat(exponent, mantisa, data);
+				return buffer;
+			},
+		};
+	};
+
 	export const ToColor3 = (): Method<Color3> => {
 		return {
 			Des: (buffer) => {

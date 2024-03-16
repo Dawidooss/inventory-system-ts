@@ -1,6 +1,6 @@
 import { Debris } from "@rbxts/services";
 
-export default async function removeCollisionBetweenModels(model1: Model, model2: Model, time?: number) {
+export default async function removeCollisionBetweenModels(model1: PVInstance, model2: PVInstance, time?: number) {
 	const start = tick();
 
 	const model1Parts: BasePart[] = [];

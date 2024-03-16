@@ -1,9 +1,9 @@
 import { InferState, combineProducers } from "@rbxts/reflex";
-import inventoryProducer from "./inventoryProducer";
 import { UseProducerHook, useProducer } from "@rbxts/react-reflex";
+import mainProducer from "./mainProducer";
 
 const clientState = combineProducers({
-	inventoryProducer,
+	mainProducer,
 });
 
 export type RootProducer = typeof clientState;
