@@ -12,13 +12,22 @@ export default function GunnerReticle() {
 	return (
 		<frame Size={UDim2.fromScale(1, 1)} Transparency={1}>
 			<Line Start={UDim2.fromScale(0, 0.5)} End={UDim2.fromScale(1, 0.5)} />
-			<Line Start={UDim2.fromScale(0.505, 0)} End={UDim2.fromScale(0.505, 1)} />
+			<Line Start={UDim2.fromScale(0.507, 0)} End={UDim2.fromScale(0.507, 1)} />
 			{reticle &&
 				Object.entries(reticle.AmmoTypes).map(([ammoType, reticleData]) => (
 					<ReticleRange
 						AmmoType={ammoType}
 						Data={reticleData}
-						Position={UDim2.fromScale(0.2, 0.5)}
+						MaxElevation={reticle.MaxElevation}
+						Position={
+							ammoType === "APCR"
+								? UDim2.fromScale(0.15, 0.5)
+								: ammoType === "AP"
+									? UDim2.fromScale(0.3, 0.5)
+									: ammoType === "HE"
+										? UDim2.fromScale(0.7, 0.5)
+										: UDim2.fromScale()
+						}
 						DistanceToReticle={reticle.DistanceToReticle}
 						Elevation={reticle.Elevation}
 					/>

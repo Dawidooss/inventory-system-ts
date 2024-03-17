@@ -12,7 +12,7 @@ import { ReticleData } from "client/reflex/tankProducer";
 
 const camera = Workspace.CurrentCamera!;
 
-const MAX_SCOPE_RANGE = 2500;
+const MAX_RANGE_ANGLE = 8;
 const MAX_GUN_VELOCITY = 1;
 const MAX_TURRET_VELOCITY = 1;
 
@@ -26,14 +26,16 @@ export default class Gunner extends Tanker {
 	public gunMouseVelocity = 0;
 	public turretMouseVelocity = 0;
 
-	public targetScopeRange = 0;
-	public scopeRange = 0;
-	public scopeElevation = 0;
+	// public targetScopeRange = 0;
+	// public scopeRange = 0;
+	public targetRangeElevation = 0;
+	public currentRangeElevation = 0;
 
 	public gunMotor: Motor6D;
 	public gunMotorC0: CFrame;
 	public turretMotor: Motor6D;
 	public turretMotorC0: CFrame;
+	public breachMotor: Motor6D;
 
 	public scope?: TankScope;
 	public reticle?: ReactRoblox.Root;
@@ -45,6 +47,7 @@ export default class Gunner extends Tanker {
 		this.gunMotorC0 = this.gunMotor.C0;
 		this.turretMotor = this.model.hull.FindFirstChild("turretMotor", true) as Motor6D;
 		this.turretMotorC0 = this.turretMotor.C0;
+		this.breachMotor = this.model.turret.FindFirstChild("breachMotor", true) as Motor6D;
 	}
 
 	public async Enter() {
@@ -95,8 +98,8 @@ export default class Gunner extends Tanker {
 		this.maid.GiveTask(
 			UserInputService.InputChanged.Connect((input, processed) => {
 				if (processed) return;
-				this.targetScopeRange += input.Position.Z * 100;
-				this.targetScopeRange = math.clamp(this.targetScopeRange, 0, MAX_SCOPE_RANGE);
+				this.targetRangeElevation += input.Position.Z / 5;
+				this.targetRangeElevation = math.clamp(this.targetRangeElevation, 0, MAX_RANGE_ANGLE);
 			}),
 		);
 
@@ -147,19 +150,7 @@ export default class Gunner extends Tanker {
 			MAX_TURRET_VELOCITY,
 		);
 
-		if (this.gun && this.gun.FindFirstChild("ammo") && !this.gun.breach.opened.Value) {
-			const ammoType = this.gun.FindFirstChild("ammo")!.GetAttribute("ammoType") as string;
-			const projectile = this.gun.breach.projectiles[ammoType];
-			const g = Workspace.Gravity / projectile.GetMass();
-			const v = projectile.GetAttribute("velocity") as number;
-			this.scopeElevation = math.deg(0.5 * math.asin((-g * this.scopeRange) / (v * v)));
-		} else {
-			this.scopeElevation = 0;
-		}
-
-		if (this.scope) this.scope.main.Motor6D.C1 = CFrame.Angles(0, 0, -math.rad(this.scopeElevation));
-
-		this.scopeRange = lerp(this.scopeRange, this.targetScopeRange, 0.2);
+		this.currentRangeElevation = lerp(this.currentRangeElevation, this.targetRangeElevation, 0.2);
 		this.gunRotation = this.gunRotation + finalGunVelocity / 10;
 		this.turretRotation = (this.turretRotation + finalTurretVelocity / 4) % 360;
 
@@ -177,9 +168,9 @@ export default class Gunner extends Tanker {
 		// 	camera.CFrame.LookVector.mul(10000),
 		// 	rangefinderParams,
 		// );
-		// if (result) print(result.Position.sub(camera.CFrame.Position).Magnitude);
+		// if (rangefinderResult) print(rangefinderResult.Position.sub(camera.CFrame.Position).Magnitude);
 
-		const finalGunElevation = this.gunRotation + this.scopeElevation;
+		const finalGunElevation = this.gunRotation - this.currentRangeElevation;
 
 		this.gunRotation = math.clamp(
 			this.gunRotation,
@@ -187,6 +178,7 @@ export default class Gunner extends Tanker {
 			(this.gun?.GetAttribute("depresion") as number) || 0,
 		);
 
+		if (this.scope) this.scope.main.Motor6D.C1 = CFrame.Angles(0, 0, -math.rad(-this.currentRangeElevation + 0.25));
 		Net.events.tankRotation.Client().Fire({
 			tankId: this.model.Name,
 			gunRotation: math.floor(finalGunElevation * 20),
@@ -205,19 +197,19 @@ export default class Gunner extends Tanker {
 			).Magnitude;
 
 			const ammoTypes: { [ammoType: string]: ReticleData } = {};
-			if (this.gun.FindFirstChild("ammo") && !this.gun.breach.opened.Value) {
-				const ammoType = this.gun.FindFirstChild("ammo")!.GetAttribute("ammoType") as string;
-				const projectile = this.gun.breach.projectiles[ammoType];
-				ammoTypes[ammoType] = {
-					MaxDistance: MAX_SCOPE_RANGE,
+			this.gun.breach.projectiles.GetChildren().forEach((projectile) => {
+				ammoTypes[projectile.Name] = {
 					Velocity: projectile.GetAttribute("velocity") as number,
-					Weight: projectile.GetMass(),
+					Weight: (projectile as BasePart).GetMass(),
+					Interval: projectile.GetAttribute("scopeInterval") as number,
+					MaxRanging: projectile.GetAttribute("maxRanging") as number,
 				};
-			}
+			});
 
 			clientState.setReticle({
+				MaxElevation: MAX_RANGE_ANGLE,
 				DistanceToReticle: distanceToReticle,
-				Elevation: this.scopeRange,
+				Elevation: this.currentRangeElevation,
 				AmmoTypes: ammoTypes,
 			});
 		}
@@ -235,8 +227,11 @@ export default class Gunner extends Tanker {
 	}
 
 	public Fire() {
-		const ammoInGun = this.gun?.FindFirstChild("ammo") as BasePart;
-		if (!ammoInGun) return;
+		// if (!this.gun) return;
+		// if (this.gun.breach.opened.Value) return;
+
+		// const ammoInGun = this.gun.FindFirstChild("ammo") as BasePart;
+		// if (!ammoInGun) return;
 
 		this.debounce = true;
 

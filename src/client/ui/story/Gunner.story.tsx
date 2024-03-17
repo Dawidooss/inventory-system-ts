@@ -16,12 +16,14 @@ export = (target: Frame): (() => void) => {
 		DistanceToReticle: Workspace.CurrentCamera!.CFrame.Position.sub((surfaceGui.Parent! as BasePart).Position)
 			.Magnitude,
 		Elevation: 400,
+		MaxElevation: 18,
 
 		AmmoTypes: {
 			AP: {
-				MaxDistance: 2400,
 				Velocity: 680,
 				Weight: 10,
+				Interval: 100,
+				MaxRanging: 2000,
 			},
 		},
 	});

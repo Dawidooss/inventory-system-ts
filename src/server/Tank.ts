@@ -1,9 +1,7 @@
 import Maid from "@rbxts/maid";
-import { ReplicatedFirst, ReplicatedStorage, SoundService, TweenService, Workspace } from "@rbxts/services";
+import { Debris, ReplicatedFirst, TweenService, Workspace } from "@rbxts/services";
 import { TankCrank, TankExit, TankGun, TankModel, TankSeat } from "shared/types/tank";
 import FastCast from "shared/utils/FastCast";
-import ActiveCast from "shared/utils/FastCast/ActiveCast";
-import Caster from "shared/utils/FastCast/Caster";
 import { Object } from "shared/utils/Object";
 import createMotor from "shared/utils/createMotor";
 import getTagged from "shared/utils/getTagged";
@@ -59,7 +57,6 @@ export default class Tank {
 				gunRingPart1.Parent = gun.model;
 				gunRingMotor.Name = "gunMotor";
 				this.gunMotor = gunRingMotor;
-				print(gunRingMotor);
 
 				const [breachPart0, breachPart1, breachMotor] = createMotorAt(gun.GetPivot());
 				breachPart0.Parent = gun.breach;
@@ -70,8 +67,7 @@ export default class Tank {
 				weld(this.gun.model, undefined, true, true);
 				weld(this.gun.breach, undefined, true, true);
 
-				const animController = gun.FindFirstChildOfClass("AnimationController");
-				if (!animController) return;
+				const animController = gun.breach.FindFirstChildOfClass("AnimationController")!;
 				for (let v of gun.breach.GetChildren()) {
 					if (v.IsA("Animation")) {
 						const track = animController.LoadAnimation(v);
@@ -106,6 +102,8 @@ export default class Tank {
 
 		this.caster.LengthChanged.Connect(
 			(activeCast, lastPoint, rayDir, displacement, segmentVelocity, cosmeticBulletObject) => {
+				// activeCast.AddVelocity()
+
 				const projectile = cosmeticBulletObject as BasePart;
 				if (projectile) {
 					const position = lastPoint.add(rayDir.mul(displacement));
@@ -119,10 +117,12 @@ export default class Tank {
 		);
 
 		this.caster.CastTerminating.Connect((activeCast) => {
-			let cosmeticBulletObject = activeCast.RayInfo.CosmeticBulletObject;
-			if (cosmeticBulletObject && !cosmeticBulletObject.FindFirstChild("HitWeld")) {
-				activeCast.RayInfo.CosmeticBulletObject?.Destroy();
-			}
+			const explosionEffect = ReplicatedFirst.FindFirstChild("explosionEffect")!.Clone() as BasePart;
+			explosionEffect.Parent = Workspace;
+			explosionEffect.Position = activeCast.GetPosition();
+			Debris.AddItem(explosionEffect, 0.3);
+
+			activeCast.RayInfo.CosmeticBulletObject?.Destroy();
 		});
 		this.caster.RayHit.Connect(() => {});
 	}
@@ -147,6 +147,11 @@ export default class Tank {
 		seatWeld.Parent = seat;
 		seatWeld.Part0 = character.PrimaryPart;
 		seatWeld.Part1 = seat;
+
+		const x = new Instance("NoCollisionConstraint");
+		x.Parent = seat;
+		x.Part0 = character.PrimaryPart;
+		x.Part1 = seat;
 
 		if (roleName === "Gunner") {
 			if (this.turretRingCrank) {
@@ -310,6 +315,7 @@ export default class Tank {
 
 	public Fire() {
 		if (!this.gun) return;
+		if (this.gun.breach.opened.Value) return;
 		const ammo = this.gun.FindFirstChild("ammo") as BasePart;
 		if (!ammo) return;
 
@@ -343,6 +349,7 @@ export default class Tank {
 		});
 
 		const ammoType = ammo.GetAttribute("ammoType") as string;
+		// const ammoType = "APCR";
 		const projectile = this.gun.breach.projectiles[ammoType].Clone();
 		if (projectile.Trail) projectile.Trail.Enabled = true;
 		projectile.FindFirstChildOfClass("WeldConstraint")?.Destroy();

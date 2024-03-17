@@ -3,13 +3,15 @@ import { createProducer } from "@rbxts/reflex";
 export type ReticleData = {
 	Weight: number;
 	Velocity: number;
-	MaxDistance: number;
+	Interval: number;
+	MaxRanging: number;
 };
 
 export interface TankProducer {
 	reticle?: {
 		Elevation: number;
 		DistanceToReticle: number;
+		MaxElevation: number;
 
 		AmmoTypes: {
 			[key: string]: ReticleData;
